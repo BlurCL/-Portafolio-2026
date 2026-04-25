@@ -32,7 +32,7 @@ public class AuthService {
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setCorreo(request.getCorreo());
-        // Encriptamos la contraseña antes de guardar
+
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         
         repository.save(usuario);
