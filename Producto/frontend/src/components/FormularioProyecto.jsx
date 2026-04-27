@@ -34,7 +34,7 @@ export default function FormularioProyecto() {
       calculados.push({
         nombre: material.nombre,
         cantidad: cantidad.toFixed(2),
-        costo: costo.toLocaleString('es-ES', { style: 'currency', currency: 'COP' })
+        costo: costo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })
       });
     }
     
@@ -137,7 +137,7 @@ export default function FormularioProyecto() {
                 ))}
               </ul>
               <p className="costo-total">
-                <strong>Costo total estimado: {materialesCalculados.costoTotal.toLocaleString('es-ES', { style: 'currency', currency: 'COP' })}</strong>
+                <strong>Costo total estimado: {materialesCalculados.costoTotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</strong>
               </p>
             </div>
           )}
