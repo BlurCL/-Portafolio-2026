@@ -5,6 +5,7 @@ import cl.construfacil.calculo.dto.DetalleCalculoResponse;
 import cl.construfacil.calculo.dto.PresupuestoGuardadoResponse;
 import cl.construfacil.calculo.repository.CalculoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,17 +16,30 @@ import java.util.Map;
 public class CalculoService {
 
     private final CalculoRepository calculoRepository;
+    private final RestTemplate restTemplate;
 
-    public CalculoService(CalculoRepository calculoRepository) {
+    public CalculoService(CalculoRepository calculoRepository, RestTemplate restTemplate) {
         this.calculoRepository = calculoRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> obtenerObraDesdeServicio(Integer id) {
+        String url = "http://localhost:8082/api/obras/" + id;
+        Map<String, Object> obra = restTemplate.getForObject(url, Map.class);
+
+        System.out.println("🔥 Obra recibida desde obras-service: " + obra);
+
+        return obra != null ? obra : new HashMap<>();
     }
 
     public CalculoObraResponse calcularObra(Integer idObra) {
-        Map<String, Object> obra = calculoRepository.obtenerObra(idObra);
+        Map<String, Object> obraServicio = obtenerObraDesdeServicio(idObra);
+
         List<Map<String, Object>> medidasDb = calculoRepository.obtenerMedidas(idObra);
         List<Map<String, Object>> reglas = calculoRepository.obtenerReglas(idObra);
 
-        String tipoObra = (String) obra.get("nombre_tipo_obra");
+        String tipoObra = (String) obraServicio.getOrDefault("tipo", "Desconocido");
 
         Map<String, Double> medidas = construirMapaMedidas(medidasDb);
 
@@ -153,11 +167,13 @@ public class CalculoService {
 
     private Map<String, Double> construirMapaMedidas(List<Map<String, Object>> medidasDb) {
         Map<String, Double> medidas = new HashMap<>();
+
         for (Map<String, Object> fila : medidasDb) {
             String nombre = ((String) fila.get("nombre_tipo_medida")).toLowerCase();
             Double valor = ((Number) fila.get("valor_medida")).doubleValue();
             medidas.put(nombre, valor);
         }
+
         return medidas;
     }
 
