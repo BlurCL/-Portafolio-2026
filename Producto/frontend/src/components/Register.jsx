@@ -25,8 +25,12 @@ export default function Register({ onRegister, onSwitchToLogin }) {
       } else {
         setError("");
         setSuccess(true);
-        onRegister({ nombre, fechaNacimiento, telefono, direccion, region, ciudad, comuna, email, password });
       }
+    };
+
+    const handleGoToLogin = () => {
+      onRegister({ nombre, fechaNacimiento, telefono, direccion, region, ciudad, comuna, email, password });
+      onSwitchToLogin();
     };
 
   if (success) {
@@ -52,7 +56,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <p style={{ color: "#666", marginBottom: 32 }}>¡Registro exitoso!</p>
           <p>Ahora puedes iniciar sesión con tu email y contraseña.</p>
           <button 
-            onClick={onSwitchToLogin}
+            onClick={handleGoToLogin}
             style={{
               background: "none",
               border: "none",
