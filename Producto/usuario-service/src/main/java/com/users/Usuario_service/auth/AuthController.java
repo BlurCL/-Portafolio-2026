@@ -1,3 +1,4 @@
+//AuthController.java
 package com.users.Usuario_service.auth;
 
 import java.util.Map;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import cl.construfacil.backend.model.Usuario;
+import com.users.Usuario_service.model.Usuario;
 
 @RestController
 @RequestMapping("/api/auth")

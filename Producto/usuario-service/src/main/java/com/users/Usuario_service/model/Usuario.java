@@ -1,4 +1,5 @@
-package cl.construfacil.backend.model;
+//Usuario.java
+package com.users.Usuario_service.model; // CORREGIDO
 
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +34,7 @@ public class Usuario implements UserDetails {
 
     public Usuario() {}
 
+    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNombre() { return nombre; }
@@ -41,8 +43,7 @@ public class Usuario implements UserDetails {
     public void setCorreo(String correo) { this.correo = correo; }
     public void setPassword(String password) { this.password = password; }
 
-
-
+    // Métodos de UserDetails para Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -55,7 +56,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.correo; 
+        return this.correo; // Usamos el correo como nombre de usuario para el login
     }
 
     @Override

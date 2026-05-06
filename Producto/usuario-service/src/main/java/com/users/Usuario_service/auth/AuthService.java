@@ -1,4 +1,5 @@
-package cl.construfacil.backend.auth;
+//AuthService.java
+package com.users.Usuario_service.auth; 
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,9 +9,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import cl.construfacil.backend.model.Usuario;
-import cl.construfacil.backend.repository.UsuarioRepository;
-import cl.construfacil.backend.security.JwtService;
+import com.users.Usuario_service.model.Usuario;
+import com.users.Usuario_service.repository.UsuarioRepository;
+import com.users.Usuario_service.security.JwtService;
 
 @Service
 public class AuthService {
@@ -33,6 +34,7 @@ public class AuthService {
         usuario.setNombre(request.getNombre());
         usuario.setCorreo(request.getCorreo());
 
+        // Encripta la contraseña antes de guardar
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         
         repository.save(usuario);

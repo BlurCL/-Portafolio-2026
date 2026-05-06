@@ -1,3 +1,4 @@
+///JwtService.java
 package com.users.Usuario_service.security;
 
 import java.security.Key;
@@ -18,9 +19,16 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    // key para firmar los tokens. 
+    private static final String SECRET_KEY = "Y29uY3J1ZmFjaWwyMXNsWE11Y3J1ZmFjaWwyMXNsWE11Y3J1ZmFjaWwyMXNsWE11";
 
-    private static final String SECRET_KEY = "Y29uc3RydWZhY2lsLXNlY3JldC1rZXktcGFyYS1maXJtYXItdG9rZW5zLW11eS1zZWd1cm9z";
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
 
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
@@ -31,13 +39,9 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) 
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
-    }
-
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
@@ -51,11 +55,6 @@ public class JwtService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
