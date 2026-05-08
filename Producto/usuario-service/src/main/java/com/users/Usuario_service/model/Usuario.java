@@ -52,6 +52,7 @@ public class Usuario implements UserDetails {
 
     public Usuario() {}
 
+    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -93,7 +94,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.correo; 
+        return this.correo; // Usamos el correo como nombre de usuario para el login
     }
 
     @Override

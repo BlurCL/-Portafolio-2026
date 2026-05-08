@@ -18,8 +18,6 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    // key para firmar los tokens. 
-
     private static final String SECRET_KEY = "Y29uc3RydWZhY2lsLXNlY3JldC1rZXktcGFyYS1maXJtYXItdG9rZW5zLW11eS1zZWd1cm9z";
 
     public String generateToken(UserDetails userDetails) {
