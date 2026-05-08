@@ -9,6 +9,16 @@
             "projectName": "backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-UsuarioServiceApplication<Usuario-service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.users.Usuario_service.UsuarioServiceApplication",
+            "projectName": "Usuario-service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

@@ -1,4 +1,4 @@
-package cl.construfacil.backend.auth;
+package com.users.Usuario_service.auth;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,9 +8,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import cl.construfacil.backend.model.Usuario;
-import cl.construfacil.backend.repository.UsuarioRepository;
-import cl.construfacil.backend.security.JwtService;
+import com.users.Usuario_service.model.Usuario;
+import com.users.Usuario_service.repository.UsuarioRepository;
+import com.users.Usuario_service.security.JwtService;
 
 @Service
 public class AuthService {
@@ -21,22 +21,32 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public AuthService(UsuarioRepository repository, PasswordEncoder passwordEncoder, 
-                      JwtService jwtService, AuthenticationManager authenticationManager) {
+                       JwtService jwtService, AuthenticationManager authenticationManager) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
     }
 
-    public Map<String, String> register(Usuario request) {
+    public Map<String, String> register(RegisterRequest request) {
+
+        if (!request.getPassword().equals(request.getConfirmarPassword())) {
+            throw new RuntimeException("Las contraseñas no coinciden");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
+        usuario.setFechaNacimiento(request.getFechaNacimiento());
         usuario.setCorreo(request.getCorreo());
-
+        usuario.setTelefono(request.getTelefono());
+        usuario.setDireccion(request.getDireccion());
+        usuario.setRegion(request.getRegion());
+        usuario.setCiudad(request.getCiudad());
+        usuario.setComuna(request.getComuna());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         
         repository.save(usuario);
-        
+
         String token = jwtService.generateToken(usuario);
         Map<String, String> response = new HashMap<>();
         response.put("token", token);

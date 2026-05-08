@@ -1,5 +1,6 @@
-package cl.construfacil.backend.model;
+package com.users.Usuario_service.model;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -25,8 +26,26 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String nombre;
 
+    @Column(nullable = false)
+    private LocalDate fechaNacimiento;
+
     @Column(unique = true, nullable = false)
     private String correo;
+
+    @Column(nullable = false)
+    private String telefono; 
+
+    @Column(nullable = false)
+    private String direccion;
+
+    @Column(nullable = false)
+    private String region;
+
+    @Column(nullable = false)
+    private String ciudad;
+
+    @Column(nullable = false)
+    private String comuna;
 
     @Column(nullable = false)
     private String password;
@@ -35,13 +54,32 @@ public class Usuario implements UserDetails {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public LocalDate getFechaNacimiento() { return fechaNacimiento; }
+    public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+
     public String getCorreo() { return correo; }
     public void setCorreo(String correo) { this.correo = correo; }
+
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
+
+    public String getCiudad() { return ciudad; }
+    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+
+    public String getComuna() { return comuna; }
+    public void setComuna(String comuna) { this.comuna = comuna; }
+
     public void setPassword(String password) { this.password = password; }
-
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
