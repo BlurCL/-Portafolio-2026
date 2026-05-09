@@ -36,16 +36,14 @@ public class CalculoService {
     public CalculoObraResponse calcularObra(Integer idObra) {
         Map<String, Object> obraServicio = obtenerObraDesdeServicio(idObra);
 
-        List<Map<String, Object>> medidasDb = calculoRepository.obtenerMedidas(idObra);
-        List<Map<String, Object>> reglas = calculoRepository.obtenerReglas(idObra);
+        String tipoObra = obtenerTipoObra(obraServicio);
+        Map<String, Double> medidas = obtenerMedidasDesdeObraService(obraServicio);
 
-        String tipoObra = (String) obraServicio.getOrDefault("tipo", "Desconocido");
-
-        Map<String, Double> medidas = construirMapaMedidas(medidasDb);
+        List<Map<String, Object>> reglas = calculoRepository.obtenerReglasPorTipoObra(tipoObra);
 
         double largo = medidas.getOrDefault("largo", 0.0);
         double ancho = medidas.getOrDefault("ancho", 0.0);
-        double espesor = medidas.getOrDefault("espesor", 0.0);
+        double espesor = medidas.getOrDefault("espesor", medidas.getOrDefault("alto", 0.0));
         double alto = medidas.getOrDefault("alto", 0.0);
 
         List<DetalleCalculoResponse> detalle = new ArrayList<>();
@@ -57,7 +55,17 @@ public class CalculoService {
             double factor = ((Number) regla.get("factor_calculo")).doubleValue();
             double precio = ((Number) regla.get("precio_referencial")).doubleValue();
 
-            double cantidad = calcularCantidad(tipoObra, unidadCalculo, largo, ancho, espesor, alto, factor);
+            double cantidad = calcularCantidad(
+                    tipoObra,
+                    material,
+                    unidadCalculo,
+                    largo,
+                    ancho,
+                    espesor,
+                    alto,
+                    factor
+            );
+
             double subtotal = cantidad * precio;
             total += subtotal;
 
@@ -73,16 +81,16 @@ public class CalculoService {
     }
 
     public PresupuestoGuardadoResponse guardarPresupuesto(Integer idObra) {
-        Map<String, Object> obra = calculoRepository.obtenerObra(idObra);
-        List<Map<String, Object>> medidasDb = calculoRepository.obtenerMedidas(idObra);
-        List<Map<String, Object>> reglas = calculoRepository.obtenerReglas(idObra);
+        Map<String, Object> obraServicio = obtenerObraDesdeServicio(idObra);
 
-        String tipoObra = (String) obra.get("nombre_tipo_obra");
-        Map<String, Double> medidas = construirMapaMedidas(medidasDb);
+        String tipoObra = obtenerTipoObra(obraServicio);
+        Map<String, Double> medidas = obtenerMedidasDesdeObraService(obraServicio);
+
+        List<Map<String, Object>> reglas = calculoRepository.obtenerReglasPorTipoObra(tipoObra);
 
         double largo = medidas.getOrDefault("largo", 0.0);
         double ancho = medidas.getOrDefault("ancho", 0.0);
-        double espesor = medidas.getOrDefault("espesor", 0.0);
+        double espesor = medidas.getOrDefault("espesor", medidas.getOrDefault("alto", 0.0));
         double alto = medidas.getOrDefault("alto", 0.0);
 
         List<DetalleCalculoResponse> detalle = new ArrayList<>();
@@ -97,7 +105,17 @@ public class CalculoService {
             double factor = ((Number) regla.get("factor_calculo")).doubleValue();
             double precio = ((Number) regla.get("precio_referencial")).doubleValue();
 
-            double cantidad = calcularCantidad(tipoObra, unidadCalculo, largo, ancho, espesor, alto, factor);
+            double cantidad = calcularCantidad(
+                    tipoObra,
+                    material,
+                    unidadCalculo,
+                    largo,
+                    ancho,
+                    espesor,
+                    alto,
+                    factor
+            );
+
             double subtotal = cantidad * precio;
             total += subtotal;
 
@@ -165,38 +183,115 @@ public class CalculoService {
         );
     }
 
-    private Map<String, Double> construirMapaMedidas(List<Map<String, Object>> medidasDb) {
+    private String obtenerTipoObra(Map<String, Object> obraServicio) {
+        Object tipo = obraServicio.get("tipo");
+
+        if (tipo == null || tipo.toString().trim().isEmpty()) {
+            throw new RuntimeException("La obra recibida desde obras-service no tiene tipo.");
+        }
+
+        return tipo.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Double> obtenerMedidasDesdeObraService(Map<String, Object> obraServicio) {
+        Object medidasObj = obraServicio.get("medidas");
+
+        if (!(medidasObj instanceof Map)) {
+            throw new RuntimeException("La obra recibida desde obras-service no tiene medidas válidas.");
+        }
+
+        Map<String, Object> medidasOriginales = (Map<String, Object>) medidasObj;
         Map<String, Double> medidas = new HashMap<>();
 
-        for (Map<String, Object> fila : medidasDb) {
-            String nombre = ((String) fila.get("nombre_tipo_medida")).toLowerCase();
-            Double valor = ((Number) fila.get("valor_medida")).doubleValue();
-            medidas.put(nombre, valor);
+        for (Map.Entry<String, Object> entry : medidasOriginales.entrySet()) {
+            if (entry.getValue() != null) {
+                medidas.put(entry.getKey().toLowerCase(), convertirADouble(entry.getValue()));
+            }
         }
 
         return medidas;
     }
 
-    private double calcularCantidad(String tipoObra, String unidadCalculo,
+    private double calcularCantidad(String tipoObra, String material, String unidadCalculo,
                                     double largo, double ancho, double espesor,
                                     double alto, double factor) {
 
+        /*
+         * Malla ACMA:
+         * Se vende por plancha/unidad.
+         * Para el radier se calcula:
+         * superficie obra / superficie plancha, redondeando hacia arriba.
+         *
+         * Plancha usada como referencia:
+         * 5.0 m x 2.6 m = 13 m²
+         */
+        if (material != null && material.toLowerCase().contains("malla")) {
+            double superficieObra = largo * ancho;
+
+            double largoMalla = 5.0;
+            double anchoMalla = 2.6;
+            double superficieMalla = largoMalla * anchoMalla;
+
+            if (superficieObra <= 0 || superficieMalla <= 0) {
+                return 0;
+            }
+
+            return Math.ceil(superficieObra / superficieMalla);
+        }
+
+        /*
+         * m3:
+         * Principalmente Radier:
+         * largo x ancho x espesor x factor
+         */
         if ("m3".equalsIgnoreCase(unidadCalculo)) {
             return largo * ancho * espesor * factor;
         }
 
+        /*
+         * m2:
+         * Radier/Techumbre: largo x ancho x factor
+         * Tabique: largo x alto x factor
+         */
         if ("m2".equalsIgnoreCase(unidadCalculo)) {
             if ("Tabique".equalsIgnoreCase(tipoObra)) {
-                return alto * ancho * factor;
+                return largo * alto * factor;
             }
+
             return largo * ancho * factor;
         }
 
+        /*
+         * ml:
+         * Por ahora se calcula con largo x factor.
+         * Esto aplica, por ejemplo, para costaneras de techumbre.
+         */
         if ("ml".equalsIgnoreCase(unidadCalculo)) {
             return largo * factor;
         }
 
+        /*
+         * unidad:
+         * Se usa el factor como cantidad base.
+         */
+        if ("unidad".equalsIgnoreCase(unidadCalculo) || "un".equalsIgnoreCase(unidadCalculo)) {
+            return factor;
+        }
+
         return 0;
+    }
+
+    private double convertirADouble(Object valor) {
+        if (valor == null) {
+            return 0.0;
+        }
+
+        try {
+            return Double.parseDouble(valor.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 
     private double redondear(double valor) {

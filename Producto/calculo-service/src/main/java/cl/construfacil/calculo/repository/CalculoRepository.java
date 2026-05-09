@@ -35,6 +35,7 @@ public class CalculoRepository {
             JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
             WHERE o.id_obra = ?
         """;
+
         return jdbcTemplate.queryForMap(sql, idObra);
     }
 
@@ -45,6 +46,7 @@ public class CalculoRepository {
             JOIN tipos_de_medida tm ON om.id_tipo_medida = tm.id_tipo_medida
             WHERE om.id_obra = ?
         """;
+
         return jdbcTemplate.queryForList(sql, idObra);
     }
 
@@ -63,17 +65,36 @@ public class CalculoRepository {
             JOIN materiales m ON rc.id_material = m.id_material
             WHERE o.id_obra = ?
         """;
+
         return jdbcTemplate.queryForList(sql, idObra);
     }
 
-    public Integer insertarPresupuesto(Integer idObra, double total) {
-    String sql = """
-        INSERT INTO presupuestos (id_obra, fecha_creacion, total_presupuesto)
-        VALUES (?, CURRENT_DATE, ?)
-        RETURNING id_presupuesto
-    """;
+    public List<Map<String, Object>> obtenerReglasPorTipoObra(String tipoObra) {
+        String sql = """
+            SELECT
+                t.nombre_tipo_obra,
+                m.id_material,
+                m.nombre_material,
+                m.precio_referencial,
+                rc.unidad_calculo,
+                rc.factor_calculo
+            FROM tipos_de_obra t
+            JOIN reglas_de_calculo rc ON rc.id_tipo_obra = t.id_tipo_obra
+            JOIN materiales m ON rc.id_material = m.id_material
+            WHERE LOWER(t.nombre_tipo_obra) = LOWER(?)
+        """;
 
-    return jdbcTemplate.queryForObject(sql, Integer.class, idObra, total);
+        return jdbcTemplate.queryForList(sql, tipoObra);
+    }
+
+    public Integer insertarPresupuesto(Integer idObra, double total) {
+        String sql = """
+            INSERT INTO presupuestos (id_obra, fecha_creacion, total_presupuesto)
+            VALUES (?, CURRENT_DATE, ?)
+            RETURNING id_presupuesto
+        """;
+
+        return jdbcTemplate.queryForObject(sql, Integer.class, idObra, total);
     }
 
     public void insertarDetallePresupuesto(Integer idPresupuesto, Integer idMaterial,
@@ -100,6 +121,7 @@ public class CalculoRepository {
             JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
             WHERE p.id_presupuesto = ?
         """;
+
         return jdbcTemplate.queryForMap(sql, idPresupuesto);
     }
 
@@ -115,6 +137,7 @@ public class CalculoRepository {
             WHERE dp.id_presupuesto = ?
             ORDER BY m.nombre_material
         """;
+
         return jdbcTemplate.queryForList(sql, idPresupuesto);
     }
 }

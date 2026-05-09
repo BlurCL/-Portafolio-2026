@@ -1,7 +1,9 @@
 package cl.construfacil.obras.controller;
 
+import cl.construfacil.obras.dto.CrearObraRequest;
 import cl.construfacil.obras.dto.ObraResponse;
 import cl.construfacil.obras.service.ObraService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +20,12 @@ public class ObraController {
     @GetMapping
     public String test() {
         return "Obras service funcionando 🚀";
+    }
+
+    @PostMapping
+    public ResponseEntity<ObraResponse> crearObra(@RequestBody CrearObraRequest request) {
+        ObraResponse response = obrasService.crearObra(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
