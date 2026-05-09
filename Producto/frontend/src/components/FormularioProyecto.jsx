@@ -1,12 +1,54 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { tiposObra, opcionesPorTipo, datosConstruccion } from "../data/opciones";
+import ComparadorCotizaciones from "./ComparadorCotizaciones";
 
-export default function FormularioProyecto() {
+export default function FormularioProyecto({ user }) {
   const [tipo, setTipo] = useState("");
   const [subtipo, setSubtipo] = useState("");
   const [largo, setLargo] = useState("");
   const [ancho, setAncho] = useState("");
   const [resultado, setResultado] = useState(null);
+  const [historial, setHistorial] = useState([]);
+  const [borradores, setBorradores] = useState([]);
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [showBorradores, setShowBorradores] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const savedHistorial = localStorage.getItem(`historial_${user.email}`);
+      if (savedHistorial) {
+        setHistorial(JSON.parse(savedHistorial));
+      }
+      const savedBorradores = localStorage.getItem(`borradores_${user.email}`);
+      if (savedBorradores) {
+        setBorradores(JSON.parse(savedBorradores));
+      }
+    }
+  }, [user]);
+
+  const saveHistorial = (cotizacion) => {
+    if (user) {
+      const newHistorial = [...historial, { ...cotizacion, fecha: new Date().toISOString() }];
+      setHistorial(newHistorial);
+      localStorage.setItem(`historial_${user.email}`, JSON.stringify(newHistorial));
+    }
+  };
+
+  const saveBorrador = () => {
+    if (user && (tipo || subtipo || largo || ancho)) {
+      const borrador = { tipo, subtipo, largo, ancho, fecha: new Date().toISOString() };
+      const newBorradores = [...borradores, borrador];
+      setBorradores(newBorradores);
+      localStorage.setItem(`borradores_${user.email}`, JSON.stringify(newBorradores));
+    }
+  };
+
+  const loadBorrador = (borrador) => {
+    setTipo(borrador.tipo);
+    setSubtipo(borrador.subtipo);
+    setLargo(borrador.largo);
+    setAncho(borrador.ancho);
+  };
 
   const opciones = useMemo(() => opcionesPorTipo[tipo] || [], [tipo]);
   const superficie = useMemo(() => {
@@ -34,7 +76,7 @@ export default function FormularioProyecto() {
       calculados.push({
         nombre: material.nombre,
         cantidad: cantidad.toFixed(2),
-        costo: costo.toLocaleString('es-ES', { style: 'currency', currency: 'COP' })
+        costo: costo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })
       });
     }
     
@@ -44,6 +86,16 @@ export default function FormularioProyecto() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setResultado(superficie);
+    if (materialesCalculados) {
+      const cotizacion = {
+        tipo,
+        subtipo,
+        superficie,
+        materiales: materialesCalculados.materiales,
+        costoTotal: materialesCalculados.costoTotal
+      };
+      saveHistorial(cotizacion);
+    }
   };
 
   const handleTipoChange = (e) => {
@@ -108,8 +160,59 @@ export default function FormularioProyecto() {
           <button type="submit" disabled={!tipo || !subtipo || !largo || !ancho}>
             Calcular superficie
           </button>
+          {user && (
+            <button type="button" onClick={saveBorrador}>
+              Guardar Borrador
+            </button>
+          )}
         </div>
       </form>
+
+      {user && (
+        <div className="button-row">
+          <button onClick={() => setShowHistorial(!showHistorial)}>
+            {showHistorial ? 'Ocultar Historial' : 'Ver Historial'}
+          </button>
+          <button onClick={() => setShowBorradores(!showBorradores)}>
+            {showBorradores ? 'Ocultar Borradores' : 'Ver Borradores'}
+          </button>
+        </div>
+      )}
+
+      {showHistorial && user && (
+        <div className="historial-section">
+          <h3>Historial de Cotizaciones</h3>
+          {historial.length === 0 ? (
+            <p>No hay cotizaciones guardadas.</p>
+          ) : (
+            <ul>
+              {historial.map((item, index) => (
+                <li key={index}>
+                  <strong>{item.tipo} - {item.subtipo}</strong> ({item.superficie.toFixed(2)} m²) - {item.costoTotal} - {new Date(item.fecha).toLocaleString()}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {showBorradores && user && (
+        <div className="borradores-section">
+          <h3>Borradores</h3>
+          {borradores.length === 0 ? (
+            <p>No hay borradores guardados.</p>
+          ) : (
+            <ul>
+              {borradores.map((borrador, index) => (
+                <li key={index}>
+                  <strong>{borrador.tipo} - {borrador.subtipo}</strong> ({borrador.largo}x{borrador.ancho}) - {new Date(borrador.fecha).toLocaleString()}
+                  <button onClick={() => loadBorrador(borrador)}>Cargar</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="info-panel">
         <p>
@@ -137,8 +240,9 @@ export default function FormularioProyecto() {
                 ))}
               </ul>
               <p className="costo-total">
-                <strong>Costo total estimado: {materialesCalculados.costoTotal.toLocaleString('es-ES', { style: 'currency', currency: 'COP' })}</strong>
+                <strong>Costo total estimado: {materialesCalculados.costoTotal.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}</strong>
               </p>
+              <ComparadorCotizaciones materiales={materialesCalculados.materiales} />
             </div>
           )}
         </div>

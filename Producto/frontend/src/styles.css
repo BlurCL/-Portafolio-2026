@@ -148,3 +148,140 @@ button:disabled {
     grid-column: span 2;
   }
 }
+
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #eef1f6;
+}
+
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+
+.main-content {
+  width: 100%;
+  max-width: 800px;
+}
+
+.card {
+  background: #f5f6f8;
+  padding: 30px;
+  border-radius: 20px;
+  width: 700px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+label {
+  font-weight: 500;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
+
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #6a5af9, #7b4dff);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result-box {
+  background: #dfe5ec;
+  padding: 15px;
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+.historial-section, .borradores-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 10px;
+}
+
+.historial-section ul, .borradores-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.historial-section li, .borradores-section li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comparador-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f0f8ff;
+  border-radius: 10px;
+}
+
+.cotizaciones-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.cotizacion-card {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+}
+
+.cotizacion-card.mas-economica {
+  border-color: green;
+  background: #e8f5e8;
+}
+
+.cotizacion-card button {
+  margin-top: 10px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cotizacion-card button:hover {
+  background: #45a049;
+}
