@@ -3,10 +3,12 @@ package cl.construfacil.calculo.service;
 import cl.construfacil.calculo.dto.CalculoObraResponse;
 import cl.construfacil.calculo.dto.DetalleCalculoResponse;
 import cl.construfacil.calculo.dto.PresupuestoGuardadoResponse;
+import cl.construfacil.calculo.dto.PresupuestoResumenResponse;
 import cl.construfacil.calculo.repository.CalculoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -181,6 +183,29 @@ public class CalculoService {
                 detalle,
                 redondear(((Number) cabecera.get("total_presupuesto")).doubleValue())
         );
+    }
+
+    public List<PresupuestoResumenResponse> listarPresupuestos() {
+        List<Map<String, Object>> filas = calculoRepository.listarPresupuestos();
+
+        List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
+
+        for (Map<String, Object> fila : filas) {
+            Date fechaSql = (Date) fila.get("fecha_creacion");
+
+            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
+                    ((Number) fila.get("id_presupuesto")).intValue(),
+                    ((Number) fila.get("id_obra")).intValue(),
+                    (String) fila.get("nombre_obra"),
+                    (String) fila.get("nombre_tipo_obra"),
+                    fechaSql != null ? fechaSql.toLocalDate() : null,
+                    redondear(((Number) fila.get("total_presupuesto")).doubleValue())
+            );
+
+            presupuestos.add(resumen);
+        }
+
+        return presupuestos;
     }
 
     private String obtenerTipoObra(Map<String, Object> obraServicio) {

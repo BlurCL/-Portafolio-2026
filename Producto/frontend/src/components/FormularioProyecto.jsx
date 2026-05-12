@@ -21,12 +21,13 @@ export default function FormularioProyecto({ user }) {
   const [showBorradores, setShowBorradores] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [error, setError] = useState("");
 
   const userKey = user?.email || "invitado";
 
   useEffect(() => {
-    cargarDatosGuardados();
+    cargarBorradoresGuardados();
   }, [userKey]);
 
   useEffect(() => {
@@ -85,30 +86,87 @@ export default function FormularioProyecto({ user }) {
     return "";
   }, [tipo]);
 
-  const cargarDatosGuardados = () => {
+  const cargarBorradoresGuardados = () => {
     try {
-      const savedHistorial = localStorage.getItem(`historial_${userKey}`);
       const savedBorradores = localStorage.getItem(`borradores_${userKey}`);
-
-      setHistorial(savedHistorial ? JSON.parse(savedHistorial) : []);
       setBorradores(savedBorradores ? JSON.parse(savedBorradores) : []);
     } catch (error) {
-      console.error("Error leyendo localStorage:", error);
-      setHistorial([]);
+      console.error("Error leyendo borradores desde localStorage:", error);
       setBorradores([]);
     }
   };
 
-  const guardarHistorial = (cotizacion) => {
-    const nuevaCotizacion = {
-      ...cotizacion,
-      fecha: new Date().toISOString(),
-    };
+  const cargarHistorialBD = async () => {
+    setLoadingHistorial(true);
+    setError("");
 
-    const nuevoHistorial = [...historial, nuevaCotizacion];
+    try {
+      const response = await fetch(`${CALCULO_API_URL}/calculos/presupuestos`);
 
-    setHistorial(nuevoHistorial);
-    localStorage.setItem(`historial_${userKey}`, JSON.stringify(nuevoHistorial));
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setHistorial(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error cargando historial desde BD:", error);
+      setError(
+        "No se pudo cargar el historial desde la base de datos. Revisa que calculo-service esté funcionando en el puerto 8081."
+      );
+    } finally {
+      setLoadingHistorial(false);
+    }
+  };
+
+  const toggleHistorial = async () => {
+    const nuevoEstado = !showHistorial;
+    setShowHistorial(nuevoEstado);
+
+    if (nuevoEstado) {
+      await cargarHistorialBD();
+    }
+  };
+
+  const verDetallePresupuesto = async (itemHistorial) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${CALCULO_API_URL}/calculos/presupuesto/${itemHistorial.idPresupuesto}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const resultadoDetalle = {
+        origen: "backend",
+        idPresupuesto: data.idPresupuesto || itemHistorial.idPresupuesto,
+        obraId: data.obraId || itemHistorial.idObra,
+        nombreObra: itemHistorial.nombreObra || "Obra sin nombre",
+        tipoObra: data.tipoObra || itemHistorial.tipoObra,
+        subtipo: "Presupuesto guardado",
+        largo: null,
+        ancho: null,
+        alto: null,
+        superficie: null,
+        detalle: Array.isArray(data.detalle) ? data.detalle : [],
+        total: data.total || itemHistorial.totalPresupuesto || 0,
+      };
+
+      setResultado(resultadoDetalle);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    } catch (error) {
+      console.error("Error cargando detalle del presupuesto:", error);
+      setError("No se pudo cargar el detalle del presupuesto seleccionado.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const guardarBorrador = () => {
@@ -166,10 +224,8 @@ export default function FormularioProyecto({ user }) {
     if (!subtipo) return "Debes seleccionar un subtipo.";
     if (!largo || Number(largo) <= 0) return "Debes ingresar un largo válido.";
 
-    if (tipo !== "Tabique") {
-      if (!ancho || Number(ancho) <= 0) {
-        return "Debes ingresar un ancho válido.";
-      }
+    if (!ancho || Number(ancho) <= 0) {
+      return "Debes ingresar un ancho válido.";
     }
 
     if (tipo === "Radier" && (!alto || Number(alto) <= 0)) {
@@ -178,10 +234,6 @@ export default function FormularioProyecto({ user }) {
 
     if (tipo === "Tabique" && (!alto || Number(alto) <= 0)) {
       return "Debes ingresar un alto válido para el tabique.";
-    }
-
-    if (tipo === "Tabique" && (!ancho || Number(ancho) <= 0)) {
-      return "Debes ingresar un ancho válido.";
     }
 
     if (superficie <= 0) return "La superficie debe ser mayor a cero.";
@@ -331,7 +383,10 @@ export default function FormularioProyecto({ user }) {
       );
 
       setResultado(resultadoFinal);
-      guardarHistorial(resultadoFinal);
+
+      if (showHistorial) {
+        await cargarHistorialBD();
+      }
     } catch (error) {
       console.error("Error generando presupuesto:", error);
 
@@ -538,7 +593,7 @@ export default function FormularioProyecto({ user }) {
       </div>
 
       <div className="button-row">
-        <button type="button" onClick={() => setShowHistorial(!showHistorial)}>
+        <button type="button" onClick={toggleHistorial}>
           {showHistorial ? "Ocultar historial" : "Ver historial"}
         </button>
 
@@ -549,40 +604,35 @@ export default function FormularioProyecto({ user }) {
 
       {showHistorial && (
         <div className="historial-section">
-          <h3>Historial de cotizaciones</h3>
+          <h3>Historial de presupuestos guardados</h3>
 
-          {historial.length === 0 ? (
-            <p>No hay cotizaciones guardadas.</p>
+          {loadingHistorial ? (
+            <p>Cargando historial...</p>
+          ) : historial.length === 0 ? (
+            <p>No hay presupuestos guardados en la base de datos.</p>
           ) : (
             <ul>
-              {historial.map((item, index) => (
-                <li key={`${item.fecha}_${index}`}>
+              {historial.map((item) => (
+                <li key={item.idPresupuesto}>
                   <strong>{item.nombreObra || "Obra sin nombre"}</strong>
 
-                  <span>
-                    {" "}
-                    | {item.tipoObra || item.tipo || "Sin tipo"}
-                  </span>
+                  <span> | ID: {item.idPresupuesto}</span>
 
-                  <span>
-                    {" "}
-                    | Superficie:{" "}
-                    {item.superficie
-                      ? `${Number(item.superficie).toFixed(2)} m²`
-                      : "--"}
-                  </span>
+                  <span> | Tipo: {item.tipoObra || "Sin tipo"}</span>
 
-                  {item.tipoObra === "Radier" && item.alto && (
-                    <span> | Espesor: {item.alto} m</span>
-                  )}
+                  <span> | Total: {formatCLP(item.totalPresupuesto)}</span>
 
-                  {item.tipoObra === "Tabique" && item.alto && (
-                    <span> | Alto: {item.alto} m</span>
-                  )}
+                  <span> | Fecha: {formatFecha(item.fechaCreacion)}</span>
 
-                  <span> | Total: {formatCLP(item.total)}</span>
-
-                  <span> | Fecha: {formatFecha(item.fecha)}</span>
+                  <div className="button-row small">
+                    <button
+                      type="button"
+                      onClick={() => verDetallePresupuesto(item)}
+                      disabled={loading}
+                    >
+                      Ver detalle
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -643,6 +693,12 @@ export default function FormularioProyecto({ user }) {
       {resultado && (
         <div className="result-box">
           <h3>Presupuesto generado</h3>
+
+          {resultado.idPresupuesto && (
+            <p>
+              <strong>ID presupuesto:</strong> {resultado.idPresupuesto}
+            </p>
+          )}
 
           <p>
             <strong>Obra:</strong> {resultado.nombreObra}

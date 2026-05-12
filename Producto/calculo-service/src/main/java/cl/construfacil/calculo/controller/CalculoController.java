@@ -2,8 +2,11 @@ package cl.construfacil.calculo.controller;
 
 import cl.construfacil.calculo.dto.CalculoObraResponse;
 import cl.construfacil.calculo.dto.PresupuestoGuardadoResponse;
+import cl.construfacil.calculo.dto.PresupuestoResumenResponse;
 import cl.construfacil.calculo.service.CalculoService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/calculos")
@@ -29,5 +32,10 @@ public class CalculoController {
     @GetMapping("/presupuesto/{idPresupuesto}")
     public PresupuestoGuardadoResponse obtenerPresupuesto(@PathVariable Integer idPresupuesto) {
         return calculoService.obtenerPresupuesto(idPresupuesto);
+    }
+
+    @GetMapping("/presupuestos")
+    public List<PresupuestoResumenResponse> listarPresupuestos() {
+        return calculoService.listarPresupuestos();
     }
 }
