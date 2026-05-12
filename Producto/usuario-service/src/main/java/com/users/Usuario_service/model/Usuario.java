@@ -23,6 +23,9 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String rut; // <-- Nuevo campo agregado y configurado como único
+
     @Column(nullable = false)
     private String nombre;
 
@@ -52,9 +55,12 @@ public class Usuario implements UserDetails {
 
     public Usuario() {}
 
-    // Getters y Setters
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getRut() { return rut; }
+    public void setRut(String rut) { this.rut = rut; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -82,6 +88,8 @@ public class Usuario implements UserDetails {
 
     public void setPassword(String password) { this.password = password; }
 
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -94,7 +102,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.correo; // Usamos el correo como nombre de usuario para el login
+        return this.correo; 
     }
 
     @Override

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class RegisterRequest {
     
+    private String rut; 
     private String nombre;
     private LocalDate fechaNacimiento;
     private String correo;
@@ -15,6 +16,8 @@ public class RegisterRequest {
     private String password;
     private String confirmarPassword; 
 
+    public String getRut() { return rut; }
+    public void setRut(String rut) { this.rut = rut; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
