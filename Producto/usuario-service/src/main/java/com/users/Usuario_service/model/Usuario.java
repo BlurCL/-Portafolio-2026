@@ -1,6 +1,6 @@
 package com.users.Usuario_service.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -16,104 +16,143 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "usuarios") 
+@Table(name = "usuarios")
 public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_usuario")
+    private Integer idUsuario;
 
-    @Column(unique = true, nullable = false)
-    private String rut; // <-- Nuevo campo agregado y configurado como único
+    @Column(name = "id_cliente")
+    private Integer idCliente;
 
-    @Column(nullable = false)
-    private String nombre;
+    @Column(name = "nombre_usuario", nullable = false)
+    private String nombreUsuario;
 
-    @Column(nullable = false)
-    private LocalDate fechaNacimiento;
-
-    @Column(unique = true, nullable = false)
+    @Column(name = "correo", nullable = false, unique = true)
     private String correo;
 
-    @Column(nullable = false)
-    private String telefono; 
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
-    @Column(nullable = false)
-    private String direccion;
+    @Column(name = "rol", nullable = false)
+    private String rol;
 
-    @Column(nullable = false)
-    private String region;
+    @Column(name = "activo", nullable = false)
+    private Boolean activo;
 
-    @Column(nullable = false)
-    private String ciudad;
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
-    @Column(nullable = false)
-    private String comuna;
+    public Usuario() {
+        this.rol = "CLIENTE";
+        this.activo = true;
+        this.fechaCreacion = LocalDateTime.now();
+    }
 
-    @Column(nullable = false)
-    private String password;
+    public Integer getIdUsuario() {
+        return idUsuario;
+    }
 
-    public Usuario() {}
+    public void setIdUsuario(Integer idUsuario) {
+        this.idUsuario = idUsuario;
+    }
 
-    
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getIdCliente() {
+        return idCliente;
+    }
 
-    public String getRut() { return rut; }
-    public void setRut(String rut) { this.rut = rut; }
+    public void setIdCliente(Integer idCliente) {
+        this.idCliente = idCliente;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombreUsuario() {
+        return nombreUsuario;
+    }
 
-    public LocalDate getFechaNacimiento() { return fechaNacimiento; }
-    public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
+    }
 
-    public String getCorreo() { return correo; }
-    public void setCorreo(String correo) { this.correo = correo; }
+    public String getCorreo() {
+        return correo;
+    }
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public String getPasswordHash() {
+        return passwordHash;
+    }
 
-    public String getRegion() { return region; }
-    public void setRegion(String region) { this.region = region; }
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 
-    public String getCiudad() { return ciudad; }
-    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+    public String getRol() {
+        return rol;
+    }
 
-    public String getComuna() { return comuna; }
-    public void setComuna(String comuna) { this.comuna = comuna; }
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
 
-    public void setPassword(String password) { this.password = password; }
+    public Boolean getActivo() {
+        return activo;
+    }
 
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
 
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        String rolNormalizado = rol == null ? "CLIENTE" : rol.toUpperCase();
+
+        if (!rolNormalizado.startsWith("ROLE_")) {
+            rolNormalizado = "ROLE_" + rolNormalizado;
+        }
+
+        return List.of(new SimpleGrantedAuthority(rolNormalizado));
     }
 
     @Override
     public String getPassword() {
-        return this.password;
+        return this.passwordHash;
     }
 
     @Override
     public String getUsername() {
-        return this.correo; 
+        return this.correo;
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return Boolean.TRUE.equals(this.activo);
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() {
+        return Boolean.TRUE.equals(this.activo);
+    }
 }

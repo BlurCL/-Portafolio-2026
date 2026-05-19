@@ -1,0 +1,6 @@
+cl\construfacil\obras\controller\ObraController.class
+cl\construfacil\obras\dto\ObraResponse.class
+cl\construfacil\obras\ObraServiceApplication.class
+cl\construfacil\obras\service\ObraService.class
+cl\construfacil\obras\dto\CrearObraRequest.class
+cl\construfacil\obras\repository\ObraRepository.class

@@ -1,5 +1,6 @@
 package com.users.Usuario_service.auth;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,8 +21,12 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthService(UsuarioRepository repository, PasswordEncoder passwordEncoder, 
-                       JwtService jwtService, AuthenticationManager authenticationManager) {
+    public AuthService(
+            UsuarioRepository repository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager
+    ) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -34,21 +39,34 @@ public class AuthService {
             throw new RuntimeException("Las contraseñas no coinciden");
         }
 
+        if (repository.findByCorreo(request.getCorreo()).isPresent()) {
+            throw new RuntimeException("Ya existe un usuario con ese correo");
+        }
+
         Usuario usuario = new Usuario();
-        usuario.setRut(request.getRut()); 
-        usuario.setNombre(request.getNombre());
-        usuario.setFechaNacimiento(request.getFechaNacimiento());
+
+        /*
+         * IMPORTANTE:
+         * La tabla usuarios real tiene:
+         * id_usuario, id_cliente, nombre_usuario, correo,
+         * password_hash, rol, activo, fecha_creacion.
+         *
+         * Los datos como rut, teléfono, dirección y comuna pertenecen
+         * a la tabla clientes, no a usuarios.
+         */
+
+        usuario.setIdCliente(1); // Temporal: cliente existente de prueba
+        usuario.setNombreUsuario(request.getNombre());
         usuario.setCorreo(request.getCorreo());
-        usuario.setTelefono(request.getTelefono());
-        usuario.setDireccion(request.getDireccion());
-        usuario.setRegion(request.getRegion());
-        usuario.setCiudad(request.getCiudad());
-        usuario.setComuna(request.getComuna());
-        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        
+        usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        usuario.setRol("CLIENTE");
+        usuario.setActivo(true);
+        usuario.setFechaCreacion(LocalDateTime.now());
+
         repository.save(usuario);
 
         String token = jwtService.generateToken(usuario);
+
         Map<String, String> response = new HashMap<>();
         response.put("token", token);
         return response;
@@ -58,33 +76,14 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(correo, password)
         );
-        
-        Usuario usuario = repository.findByCorreo(correo).orElseThrow();
+
+        Usuario usuario = repository.findByCorreoAndActivoTrue(correo)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado o inactivo"));
+
         String token = jwtService.generateToken(usuario);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("token", token);
         return response;
     }
 }
-
-
-/*
-Json para probar en postman
-{
-    "rut": "19.123.456-7",
-    "nombre": "Cristobal",
-    "fechaNacimiento": "1995-08-25",
-    "correo": "cristobal@ejemplo.com",
-    "telefono": "+56912345678",
-    "direccion": "Av. Principal 123",
-    "region": "Metropolitana",
-    "ciudad": "Santiago",
-    "comuna": "Maipú",
-    "password": "miPassword123",
-    "confirmarPassword": "miPassword123"
-}
-
-
-
-*/
