@@ -1,9 +1,21 @@
+# Node
+node_modules/
+**/node_modules/
+dist/
+.vite/
 
-# Maven build files
+# Java / Maven
 target/
 **/target/
 *.class
 
-# Node
-node_modules/
-**/node_modules/
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Config local sensible
+.env
+application.properties
