@@ -38,4 +38,14 @@ public class CalculoController {
     public List<PresupuestoResumenResponse> listarPresupuestos() {
         return calculoService.listarPresupuestos();
     }
+
+    @GetMapping("/presupuestos/cliente/{idCliente}")
+    public List<PresupuestoResumenResponse> listarPresupuestosPorCliente(@PathVariable Integer idCliente) {
+        return calculoService.listarPresupuestosPorCliente(idCliente);
+    }
+
+    @GetMapping("/presupuestos/usuario/{idUsuario}")
+public List<PresupuestoResumenResponse> listarPresupuestosPorUsuario(@PathVariable Integer idUsuario) {
+    return calculoService.listarPresupuestosPorUsuario(idUsuario);
+}
 }

@@ -158,4 +158,42 @@ public class CalculoRepository {
 
     return jdbcTemplate.queryForList(sql);
 }
+
+public List<Map<String, Object>> listarPresupuestosPorCliente(Integer idCliente) {
+    String sql = """
+        SELECT
+            p.id_presupuesto,
+            p.id_obra,
+            o.nombre_obra,
+            t.nombre_tipo_obra,
+            p.fecha_creacion,
+            p.total_presupuesto
+        FROM presupuestos p
+        JOIN obras o ON p.id_obra = o.id_obra
+        JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
+        WHERE o.id_cliente = ?
+        ORDER BY p.id_presupuesto DESC
+    """;
+
+    return jdbcTemplate.queryForList(sql, idCliente);
+}
+
+public List<Map<String, Object>> listarPresupuestosPorUsuario(Integer idUsuario) {
+    String sql = """
+        SELECT
+            p.id_presupuesto,
+            p.id_obra,
+            o.nombre_obra,
+            t.nombre_tipo_obra,
+            p.fecha_creacion,
+            p.total_presupuesto
+        FROM presupuestos p
+        JOIN obras o ON p.id_obra = o.id_obra
+        JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
+        WHERE o.id_usuario = ?
+        ORDER BY p.id_presupuesto DESC
+    """;
+
+    return jdbcTemplate.queryForList(sql, idUsuario);
+}
 }

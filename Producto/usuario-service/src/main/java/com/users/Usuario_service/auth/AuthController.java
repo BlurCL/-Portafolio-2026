@@ -1,4 +1,3 @@
-// AuthController.java
 package com.users.Usuario_service.auth;
 
 import java.util.HashMap;
@@ -34,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody Map<String, String> request) {
         return ResponseEntity.ok(
                 authService.login(
                         request.get("correo"),

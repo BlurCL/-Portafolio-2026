@@ -40,23 +40,26 @@ public class ObraRepository {
         String sql = """
             INSERT INTO obras (
                 id_cliente,
+                id_usuario,
                 id_tipo_obra,
                 id_comuna,
                 nombre_obra,
                 descripcion_obra,
                 fecha_creacion
             )
-            VALUES (?, ?, ?, ?, ?, CURRENT_DATE)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE)
             RETURNING id_obra
         """;
 
-        Integer idCliente = 1;
+        Integer idCliente = request.getIdCliente() != null ? request.getIdCliente() : 1;
+        Integer idUsuario = request.getIdUsuario() != null ? request.getIdUsuario() : 1;
         Integer idComuna = 1;
 
         return jdbcTemplate.queryForObject(
                 sql,
                 Integer.class,
                 idCliente,
+                idUsuario,
                 idTipoObra,
                 idComuna,
                 request.getNombre(),

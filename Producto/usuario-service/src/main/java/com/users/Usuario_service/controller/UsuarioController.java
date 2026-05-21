@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.users.Usuario_service.dto.UsuarioResponse;
 import com.users.Usuario_service.model.Usuario;
 import com.users.Usuario_service.repository.UsuarioRepository;
 
@@ -25,8 +26,12 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodosLosUsuarios() {
-        List<Usuario> usuarios = usuarioRepository.findByActivoTrueOrderByIdUsuarioAsc();
+    public ResponseEntity<List<UsuarioResponse>> obtenerTodosLosUsuarios() {
+        List<UsuarioResponse> usuarios = usuarioRepository.findByActivoTrueOrderByIdUsuarioAsc()
+                .stream()
+                .map(this::mapearUsuario)
+                .toList();
+
         return ResponseEntity.ok(usuarios);
     }
 
@@ -35,9 +40,21 @@ public class UsuarioController {
         Optional<Usuario> usuario = usuarioRepository.findById(idUsuario);
 
         if (usuario.isPresent() && Boolean.TRUE.equals(usuario.get().getActivo())) {
-            return ResponseEntity.ok(usuario.get());
+            return ResponseEntity.ok(mapearUsuario(usuario.get()));
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    private UsuarioResponse mapearUsuario(Usuario usuario) {
+        return new UsuarioResponse(
+                usuario.getIdUsuario(),
+                usuario.getIdCliente(),
+                usuario.getNombreUsuario(),
+                usuario.getCorreo(),
+                usuario.getRol(),
+                usuario.getActivo(),
+                usuario.getFechaCreacion()
+        );
     }
 }

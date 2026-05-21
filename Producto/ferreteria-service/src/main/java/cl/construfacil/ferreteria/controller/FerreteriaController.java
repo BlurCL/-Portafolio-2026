@@ -1,5 +1,7 @@
 package cl.construfacil.ferreteria.controller;
 
+import cl.construfacil.ferreteria.dto.CotizacionFerreteriaResponse;
+import cl.construfacil.ferreteria.dto.CotizacionRequest;
 import cl.construfacil.ferreteria.dto.FerreteriaResponse;
 import cl.construfacil.ferreteria.dto.ProductoFerreteriaResponse;
 import cl.construfacil.ferreteria.service.FerreteriaService;
@@ -38,5 +40,12 @@ public class FerreteriaController {
     @GetMapping("/materiales/{idProducto}")
     public ProductoFerreteriaResponse obtenerMaterialPorId(@PathVariable Integer idProducto) {
         return ferreteriaService.obtenerMaterialPorId(idProducto);
+    }
+
+    @PostMapping("/ferreterias/cotizar")
+    public List<CotizacionFerreteriaResponse> cotizarMateriales(
+            @RequestBody CotizacionRequest request
+    ) {
+        return ferreteriaService.cotizarMateriales(request);
     }
 }

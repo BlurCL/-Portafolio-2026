@@ -208,6 +208,29 @@ public class CalculoService {
         return presupuestos;
     }
 
+    public List<PresupuestoResumenResponse> listarPresupuestosPorCliente(Integer idCliente) {
+        List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorCliente(idCliente);
+
+        List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
+
+        for (Map<String, Object> fila : filas) {
+            Date fechaSql = (Date) fila.get("fecha_creacion");
+
+            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
+                    ((Number) fila.get("id_presupuesto")).intValue(),
+                    ((Number) fila.get("id_obra")).intValue(),
+                    (String) fila.get("nombre_obra"),
+                    (String) fila.get("nombre_tipo_obra"),
+                    fechaSql != null ? fechaSql.toLocalDate() : null,
+                    redondear(((Number) fila.get("total_presupuesto")).doubleValue())
+            );
+
+            presupuestos.add(resumen);
+        }
+
+        return presupuestos;
+    }
+
     private String obtenerTipoObra(Map<String, Object> obraServicio) {
         Object tipo = obraServicio.get("tipo");
 
@@ -322,4 +345,27 @@ public class CalculoService {
     private double redondear(double valor) {
         return Math.round(valor * 100.0) / 100.0;
     }
+
+    public List<PresupuestoResumenResponse> listarPresupuestosPorUsuario(Integer idUsuario) {
+    List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorUsuario(idUsuario);
+
+    List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
+
+    for (Map<String, Object> fila : filas) {
+        Date fechaSql = (Date) fila.get("fecha_creacion");
+
+        PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
+                ((Number) fila.get("id_presupuesto")).intValue(),
+                ((Number) fila.get("id_obra")).intValue(),
+                (String) fila.get("nombre_obra"),
+                (String) fila.get("nombre_tipo_obra"),
+                fechaSql != null ? fechaSql.toLocalDate() : null,
+                redondear(((Number) fila.get("total_presupuesto")).doubleValue())
+        );
+
+        presupuestos.add(resumen);
+    }
+
+    return presupuestos;
+}
 }

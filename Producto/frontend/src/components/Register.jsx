@@ -1,37 +1,100 @@
 import React, { useState } from "react";
 import { regiones } from "../data/regiones";
 
+const USUARIO_API_URL = "http://localhost:8084/api";
+
 export default function Register({ onRegister, onSwitchToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+
+  const [nombre, setNombre] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [region, setRegion] = useState("");
+  const [ciudad, setCiudad] = useState("");
+  const [comuna, setComuna] = useState("");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
-    const [nombre, setNombre] = useState("");
-    const [fechaNacimiento, setFechaNacimiento] = useState("");
-    const [telefono, setTelefono] = useState("");
-    const [direccion, setDireccion] = useState("");
-    const [region, setRegion] = useState("");
-    const [ciudad, setCiudad] = useState("");
-    const [comuna, setComuna] = useState("");
-  
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (!nombre || !fechaNacimiento || !telefono || !direccion || !region || !ciudad || !comuna || !email || !password || !confirm) {
-        setError("Completa todos los campos.");
-      } else if (password !== confirm) {
-        setError("Las contraseñas no coinciden.");
-      } else {
-        setError("");
-        setSuccess(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!nombre || !email || !password || !confirm) {
+      setError("Completa nombre, correo y contraseña.");
+      return;
+    }
+
+    if (password !== confirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    try {
+      setCargando(true);
+
+      const response = await fetch(`${USUARIO_API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          correo: email,
+          password: password,
+          confirmarPassword: confirm
+        })
+      });
+
+      if (!response.ok) {
+        let mensajeError = "No se pudo registrar el usuario.";
+
+        try {
+          const errorData = await response.json();
+          mensajeError = errorData.error || mensajeError;
+        } catch {
+          // Si el backend no devuelve JSON, usamos el mensaje genérico.
+        }
+
+        throw new Error(mensajeError);
       }
-    };
 
-    const handleGoToLogin = () => {
-      onRegister({ nombre, fechaNacimiento, telefono, direccion, region, ciudad, comuna, email, password });
-      onSwitchToLogin();
-    };
+      const data = await response.json();
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      if (onRegister) {
+        onRegister({
+          nombre,
+          fechaNacimiento,
+          telefono,
+          direccion,
+          region,
+          ciudad,
+          comuna,
+          email,
+          correo: email,
+          token: data.token
+        });
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || "Error al registrar usuario.");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleGoToLogin = () => {
+    onSwitchToLogin();
+  };
 
   if (success) {
     return (
@@ -54,16 +117,19 @@ export default function Register({ onRegister, onSwitchToLogin }) {
         }}>
           <h1 style={{ color: "#333", marginBottom: 8, fontSize: 28 }}>ConstruFácil</h1>
           <p style={{ color: "#666", marginBottom: 32 }}>¡Registro exitoso!</p>
-          <p>Ahora puedes iniciar sesión con tu email y contraseña.</p>
-          <button 
+          <p>Ahora puedes iniciar sesión con tu correo y contraseña.</p>
+
+          <button
             onClick={handleGoToLogin}
             style={{
-              background: "none",
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               border: "none",
-              color: "#667eea",
+              color: "white",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: 16
+              fontSize: 16,
+              padding: "12px 20px",
+              borderRadius: 8
             }}
           >
             Ir a Iniciar Sesión
@@ -93,42 +159,48 @@ export default function Register({ onRegister, onSwitchToLogin }) {
       }}>
         <h1 style={{ color: "#333", marginBottom: 8, fontSize: 28 }}>ConstruFácil</h1>
         <p style={{ color: "#666", marginBottom: 32 }}>Crea tu cuenta</p>
+
         <form onSubmit={handleSubmit}>
           <input
             type="text"
             placeholder="Nombre completo"
             value={nombre}
             onChange={e => setNombre(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <input
             type="date"
             placeholder="Fecha de nacimiento"
             value={fechaNacimiento}
             onChange={e => setFechaNacimiento(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <input
             type="email"
             placeholder="Correo electrónico"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <input
             type="tel"
             placeholder="Número de teléfono"
             value={telefono}
             onChange={e => setTelefono(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <input
             type="text"
             placeholder="Dirección"
             value={direccion}
             onChange={e => setDireccion(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <select
             value={region}
             onChange={e => {
@@ -136,13 +208,14 @@ export default function Register({ onRegister, onSwitchToLogin }) {
               setCiudad("");
               setComuna("");
             }}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           >
             <option value="">Selecciona una región</option>
             {regiones.map(r => (
               <option key={r.nombre} value={r.nombre}>{r.nombre}</option>
             ))}
           </select>
+
           <select
             value={ciudad}
             onChange={e => {
@@ -150,61 +223,75 @@ export default function Register({ onRegister, onSwitchToLogin }) {
               setComuna("");
             }}
             disabled={!region}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           >
             <option value="">Selecciona una ciudad</option>
             {region && regiones.find(r => r.nombre === region)?.ciudades.map(c => (
               <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
             ))}
           </select>
+
           <select
             value={comuna}
             onChange={e => setComuna(e.target.value)}
             disabled={!ciudad}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           >
             <option value="">Selecciona una comuna</option>
             {region && ciudad &&
-              regiones.find(r => r.nombre === region)?.ciudades.find(c => c.nombre === ciudad)?.comunas.map(com => (
-                <option key={com} value={com}>{com}</option>
-              ))}
+              regiones
+                .find(r => r.nombre === region)
+                ?.ciudades.find(c => c.nombre === ciudad)
+                ?.comunas.map(com => (
+                  <option key={com} value={com}>{com}</option>
+                ))}
           </select>
+
           <input
             type="password"
             placeholder="Contraseña"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
           <input
             type="password"
             placeholder="Confirmar contraseña"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
-            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: 12, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
           />
+
+          {error && (
+            <div style={{ color: "#e53e3e", marginBottom: 12 }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
+            disabled={cargando}
             style={{
               width: "100%",
               padding: "14px 24px",
               fontSize: 16,
               fontWeight: "bold",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: cargando ? "#999" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               color: "white",
               border: "none",
               borderRadius: 8,
-              cursor: "pointer",
+              cursor: cargando ? "not-allowed" : "pointer",
               marginBottom: 16
             }}
           >
-            Registrarse
+            {cargando ? "Registrando..." : "Registrarse"}
           </button>
-          {error && <div style={{ color: "#e53e3e", marginBottom: 8 }}>{error}</div>}
         </form>
+
         <p style={{ color: "#666", marginTop: 16 }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onSwitchToLogin}
             style={{
               background: "none",

@@ -1,8 +1,6 @@
 package com.users.Usuario_service.auth;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,7 +31,11 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
-    public Map<String, String> register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
+
+        if (request.getPassword() == null || request.getConfirmarPassword() == null) {
+            throw new RuntimeException("Debe ingresar contraseña y confirmación");
+        }
 
         if (!request.getPassword().equals(request.getConfirmarPassword())) {
             throw new RuntimeException("Las contraseñas no coinciden");
@@ -44,16 +46,6 @@ public class AuthService {
         }
 
         Usuario usuario = new Usuario();
-
-        /*
-         * IMPORTANTE:
-         * La tabla usuarios real tiene:
-         * id_usuario, id_cliente, nombre_usuario, correo,
-         * password_hash, rol, activo, fecha_creacion.
-         *
-         * Los datos como rut, teléfono, dirección y comuna pertenecen
-         * a la tabla clientes, no a usuarios.
-         */
 
         usuario.setIdCliente(1); // Temporal: cliente existente de prueba
         usuario.setNombreUsuario(request.getNombre());
@@ -67,12 +59,10 @@ public class AuthService {
 
         String token = jwtService.generateToken(usuario);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        return response;
+        return mapearAuthResponse(usuario, token);
     }
 
-    public Map<String, String> login(String correo, String password) {
+    public AuthResponse login(String correo, String password) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(correo, password)
         );
@@ -82,8 +72,17 @@ public class AuthService {
 
         String token = jwtService.generateToken(usuario);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        return response;
+        return mapearAuthResponse(usuario, token);
+    }
+
+    private AuthResponse mapearAuthResponse(Usuario usuario, String token) {
+        return new AuthResponse(
+                token,
+                usuario.getIdUsuario(),
+                usuario.getIdCliente(),
+                usuario.getNombreUsuario(),
+                usuario.getCorreo(),
+                usuario.getRol()
+        );
     }
 }

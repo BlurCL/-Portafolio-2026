@@ -86,6 +86,28 @@ export default function FormularioProyecto({ user }) {
     return "";
   }, [tipo]);
 
+  const obtenerIdCliente = () => {
+    const idCliente =
+      localStorage.getItem("idCliente") ||
+      localStorage.getItem("id_cliente") ||
+      user?.idCliente ||
+      user?.id_cliente;
+
+    return idCliente ? Number(idCliente) : null;
+  };
+
+  const obtenerIdUsuario = () => {
+    const idUsuario =
+      localStorage.getItem("idUsuario") ||
+      localStorage.getItem("id_usuario") ||
+      user?.idUsuario ||
+      user?.id_usuario;
+
+    console.log("ID USUARIO USADO EN FORMULARIO:", idUsuario);
+
+    return idUsuario ? Number(idUsuario) : null;
+  };
+
   const cargarBorradoresGuardados = () => {
     try {
       const savedBorradores = localStorage.getItem(`borradores_${userKey}`);
@@ -101,7 +123,18 @@ export default function FormularioProyecto({ user }) {
     setError("");
 
     try {
-      const response = await fetch(`${CALCULO_API_URL}/calculos/presupuestos`);
+      const idUsuario = obtenerIdUsuario();
+
+      if (!idUsuario) {
+        setHistorial([]);
+        throw new Error(
+          "No se encontró el idUsuario del usuario conectado en localStorage."
+        );
+      }
+
+      const response = await fetch(
+        `${CALCULO_API_URL}/calculos/presupuestos/usuario/${idUsuario}`
+      );
 
       if (!response.ok) {
         throw new Error(`Error HTTP ${response.status}`);
@@ -113,7 +146,7 @@ export default function FormularioProyecto({ user }) {
     } catch (error) {
       console.error("Error cargando historial desde BD:", error);
       setError(
-        "No se pudo cargar el historial desde la base de datos. Revisa que calculo-service esté funcionando en el puerto 8081."
+        "No se pudo cargar el historial del usuario conectado. Revisa que el login guarde idUsuario y que calculo-service esté funcionando en el puerto 8081."
       );
     } finally {
       setLoadingHistorial(false);
@@ -257,13 +290,22 @@ export default function FormularioProyecto({ user }) {
   };
 
   const crearObra = async () => {
+    const idCliente = obtenerIdCliente();
+    const idUsuario = obtenerIdUsuario();
+
     const payloadObra = {
       nombre: nombreObra.trim(),
       nombreObra: nombreObra.trim(),
       nombre_obra: nombreObra.trim(),
 
-      usuarioEmail: user?.email || null,
-      usuario_email: user?.email || null,
+      idCliente,
+      id_cliente: idCliente,
+
+      idUsuario,
+      id_usuario: idUsuario,
+
+      usuarioEmail: user?.email || user?.correo || null,
+      usuario_email: user?.email || user?.correo || null,
 
       tipo,
       tipoObra: tipo,
@@ -304,7 +346,7 @@ export default function FormularioProyecto({ user }) {
 
     console.log("Obra creada desde obras-service:", data);
 
-    const obraId = data.id || data.obraId || data.obra_id;
+    const obraId = data.id || data.obraId || data.obra_id || data.idObra || data.id_obra;
 
     if (!obraId) {
       console.error("Respuesta sin ID desde obras-service:", data);

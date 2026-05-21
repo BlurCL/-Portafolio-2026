@@ -1,54 +1,128 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-const ferreterias = [
-  {
-    nombre: "Ferremax",
-    ubicacion: "Dentro de Maipú",
-    despacho: 0,
-    factorPrecio: 0.97,
-    url: "https://www.ferremax.cl"
-  },
-  {
-    nombre: "Construmart",
-    ubicacion: "Fuera de Maipú",
-    despacho: 15000,
-    factorPrecio: 1.04,
-    url: "https://www.construmart.cl"
-  }
-];
+const FERRETERIA_API_URL =
+  import.meta.env.VITE_FERRETERIA_API_URL || "http://localhost:8083/api";
+
+const FERRETERIA_FRONT_URL =
+  import.meta.env.VITE_FERRETERIA_FRONT_URL || "";
 
 export default function ComparadorCotizaciones({ materiales = [] }) {
+  const [cotizaciones, setCotizaciones] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [seleccionada, setSeleccionada] = useState(null);
 
   const formatCLP = (valor) => {
     return Number(valor || 0).toLocaleString("es-CL", {
       style: "currency",
-      currency: "CLP"
+      currency: "CLP",
     });
   };
 
-  const totalBase = materiales.reduce((total, material) => {
-    const subtotal = Number(material.subtotal || 0);
-    return total + subtotal;
-  }, 0);
+  const totalBase = useMemo(() => {
+    return materiales.reduce((total, material) => {
+      const subtotal = Number(material.subtotal || 0);
+      return total + subtotal;
+    }, 0);
+  }, [materiales]);
 
-  const calcularCostoFerreteria = (ferreteria) => {
-    const subtotalMateriales = totalBase * ferreteria.factorPrecio;
-    return Math.round(subtotalMateriales + ferreteria.despacho);
+  useEffect(() => {
+    const cotizarEnFerreterias = async () => {
+      if (!materiales.length || totalBase <= 0) {
+        setCotizaciones([]);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const payload = {
+          comunaDestino: "Maipú",
+          materiales: materiales.map((material) => ({
+            nombre:
+              material.nombre ||
+              material.material ||
+              material.nombreProducto ||
+              "",
+            cantidad: Number(material.cantidad || 0),
+            precioUnitario: Number(material.precioUnitario || 0),
+          })),
+        };
+
+        const response = await fetch(
+          `${FERRETERIA_API_URL}/ferreterias/cotizar`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!response.ok) {
+          const texto = await response.text();
+          console.error("Error ferreteria-service:", texto);
+          throw new Error(`Error HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setCotizaciones(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error cotizando en ferreterías:", error);
+        setCotizaciones([]);
+        setError(
+          "No se pudo conectar con ferreteria-service. Revisa que el servicio esté disponible."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cotizarEnFerreterias();
+  }, [materiales, totalBase]);
+
+  const codificarCarrito = (cotizacion) => {
+    const carrito = {
+      codigoFerreteria: cotizacion.codigoFerreteria,
+      nombreFerreteria: cotizacion.nombreFerreteria,
+      comuna: cotizacion.comuna,
+      direccion: cotizacion.direccion,
+      costoDespacho: cotizacion.costoDespacho,
+      totalProductos: cotizacion.totalProductos,
+      totalCotizacion: cotizacion.totalCotizacion,
+      productos: Array.isArray(cotizacion.detalle)
+        ? cotizacion.detalle.map((item) => ({
+            nombre: item.productoEncontrado || item.materialSolicitado,
+            material: item.materialSolicitado,
+            cantidad: Number(item.cantidad || 0),
+            precioUnitario: Number(item.precioUnitario || 0),
+            subtotal: Number(item.subtotal || 0),
+            unidadVenta: item.unidadVenta || "",
+          }))
+        : [],
+    };
+
+    return encodeURIComponent(
+      btoa(unescape(encodeURIComponent(JSON.stringify(carrito))))
+    );
   };
 
-  const cotizaciones = ferreterias.map((ferreteria) => ({
-    ...ferreteria,
-    costoTotal: calcularCostoFerreteria(ferreteria)
-  }));
+  const handlePago = (cotizacion) => {
+    setSeleccionada(cotizacion.nombreFerreteria);
 
-  const masEconomica = cotizaciones.reduce((prev, curr) =>
-    prev.costoTotal < curr.costoTotal ? prev : curr
-  );
+    if (!FERRETERIA_FRONT_URL) {
+      alert(
+        "Falta configurar la URL del carrito de la ferretería. Agrega VITE_FERRETERIA_FRONT_URL en el archivo .env del frontend."
+      );
+      return;
+    }
 
-  const handlePago = (ferreteria) => {
-    setSeleccionada(ferreteria.nombre);
-    window.open(ferreteria.url, "_blank");
+    const carritoCodificado = codificarCarrito(cotizacion);
+
+    window.location.href = `${FERRETERIA_FRONT_URL}/carrito?items=${carritoCodificado}`;
   };
 
   if (!materiales.length || totalBase <= 0) {
@@ -67,51 +141,93 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
         <strong>Total base del presupuesto:</strong> {formatCLP(totalBase)}
       </p>
 
-      <div className="cotizaciones-grid">
-        {cotizaciones.map((ferreteria) => (
-          <div
-            key={ferreteria.nombre}
-            className={`cotizacion-card ${
-              ferreteria.nombre === masEconomica.nombre ? "mas-economica" : ""
-            }`}
-          >
-            <h4>{ferreteria.nombre}</h4>
+      {loading && <p>Cargando cotizaciones desde ferreteria-service...</p>}
 
-            <p>
-              <strong>Ubicación:</strong> {ferreteria.ubicacion}
-            </p>
+      {error && <div className="alert-error">{error}</div>}
 
-            <p>
-              <strong>Variación precio:</strong>{" "}
-              {ferreteria.factorPrecio < 1
-                ? `${Math.round((1 - ferreteria.factorPrecio) * 100)}% más barato`
-                : `${Math.round((ferreteria.factorPrecio - 1) * 100)}% más caro`}
-            </p>
+      {!loading && !error && cotizaciones.length === 0 && (
+        <p>No hay cotizaciones disponibles para estos materiales.</p>
+      )}
 
-            <p>
-              <strong>Despacho:</strong> {formatCLP(ferreteria.despacho)}
-            </p>
+      {!loading && !error && cotizaciones.length > 0 && (
+        <div className="cotizaciones-grid">
+          {cotizaciones.map((cotizacion) => (
+            <div
+              key={cotizacion.codigoFerreteria}
+              className={`cotizacion-card ${
+                cotizacion.masConveniente ? "mas-economica" : ""
+              }`}
+            >
+              <h4>{cotizacion.nombreFerreteria}</h4>
 
-            <p>
-              <strong>Total:</strong> {formatCLP(ferreteria.costoTotal)}
-            </p>
-
-            {ferreteria.nombre === masEconomica.nombre && (
-              <p style={{ color: "green", fontWeight: "bold" }}>
-                ¡Más económica!
+              <p>
+                <strong>Comuna:</strong> {cotizacion.comuna || "No informada"}
               </p>
-            )}
 
-            <button type="button" onClick={() => handlePago(ferreteria)}>
-              Ir a Pago
-            </button>
+              <p>
+                <strong>Dirección:</strong>{" "}
+                {cotizacion.direccion || "No informada"}
+              </p>
 
-            {seleccionada === ferreteria.nombre && (
-              <p>Redirigiendo a {ferreteria.nombre}...</p>
-            )}
-          </div>
-        ))}
-      </div>
+              <p>
+                <strong>Productos:</strong>{" "}
+                {formatCLP(cotizacion.totalProductos)}
+              </p>
+
+              <p>
+                <strong>Despacho:</strong>{" "}
+                {formatCLP(cotizacion.costoDespacho)}
+              </p>
+
+              <p>
+                <strong>Total:</strong>{" "}
+                {formatCLP(cotizacion.totalCotizacion)}
+              </p>
+
+              {cotizacion.masConveniente && (
+                <p style={{ color: "green", fontWeight: "bold" }}>
+                  ¡Más económica!
+                </p>
+              )}
+
+              {Array.isArray(cotizacion.detalle) &&
+                cotizacion.detalle.length > 0 && (
+                  <div className="detalle-cotizacion">
+                    <p>
+                      <strong>Detalle:</strong>
+                    </p>
+
+                    <ul>
+                      {cotizacion.detalle.map((item, index) => (
+                        <li key={`${item.materialSolicitado}_${index}`}>
+                          {item.materialSolicitado} →{" "}
+                          {item.productoEncontrado || "No encontrado"} |
+                          Cantidad: {item.cantidad} | Precio:{" "}
+                          {formatCLP(item.precioUnitario)} | Subtotal:{" "}
+                          {formatCLP(item.subtotal)}
+                          {item.stockSuficiente === false && (
+                            <strong style={{ color: "red" }}>
+                              {" "}
+                              | Stock insuficiente
+                            </strong>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              <button type="button" onClick={() => handlePago(cotizacion)}>
+                Ir a Pago
+              </button>
+
+              {seleccionada === cotizacion.nombreFerreteria && (
+                <p>Redirigiendo a: {cotizacion.nombreFerreteria}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
