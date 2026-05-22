@@ -1,30 +1,17 @@
-﻿FROM node:20-alpine AS build
-
+﻿# Etapa 1: Construcción
+FROM node:18 AS build
 WORKDIR /app
-
-ARG VITE_USUARIO_API_URL
-ARG VITE_OBRAS_API_URL
-ARG VITE_CALCULO_API_URL
-ARG VITE_FERRETERIA_API_URL
-ARG VITE_FERRETERIA_FRONT_URL
-
-ENV VITE_USUARIO_API_URL=$VITE_USUARIO_API_URL
-ENV VITE_OBRAS_API_URL=$VITE_OBRAS_API_URL
-ENV VITE_CALCULO_API_URL=$VITE_CALCULO_API_URL
-ENV VITE_FERRETERIA_API_URL=$VITE_FERRETERIA_API_URL
-ENV VITE_FERRETERIA_FRONT_URL=$VITE_FERRETERIA_FRONT_URL
-
 COPY package*.json ./
 RUN npm install
-
 COPY . .
 RUN npm run build
 
 FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
+
+
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

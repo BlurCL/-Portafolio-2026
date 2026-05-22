@@ -1,0 +1,51 @@
+services:
+  # Microservicios de Backend
+  usuario-service:
+    build: 
+      context: ./Producto/usuario-service
+    ports:
+      - "8081:8080"
+    networks:
+      - app-network
+
+  ferreteria-service:
+    build: 
+      context: ./Producto/ferreteria-service
+    ports:
+      - "8082:8080"
+    networks:
+      - app-network
+
+  obras-service:
+    build: 
+      context: ./Producto/obras-service
+    ports:
+      - "8083:8080"
+    networks:
+      - app-network
+
+  calculo-service:
+    build: 
+      context: ./Producto/calculo-service
+    ports:
+      - "8084:8080"
+    networks:
+      - app-network
+
+  # Frontend de React
+  frontend:
+    build: 
+      context: ./Producto/frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - usuario-service
+      - ferreteria-service
+      - obras-service
+      - calculo-service
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
