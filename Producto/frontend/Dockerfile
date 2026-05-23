@@ -11,7 +11,7 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
 
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+RUN printf "events { worker_connections 1024; }\nhttp {\n    include /etc/nginx/mime.types;\n    server {\n        listen 80;\n        location / {\n            root /usr/share/nginx/html;\n            index index.html;\n            try_files \$uri \$uri/ /index.html;\n        }\n    }\n}" > /etc/nginx/nginx.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
