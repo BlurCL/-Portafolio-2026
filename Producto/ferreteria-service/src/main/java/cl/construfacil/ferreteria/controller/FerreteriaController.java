@@ -37,15 +37,5 @@ public class FerreteriaController {
         return ferreteriaService.listarMateriales();
     }
 
-    @GetMapping("/materiales/{idProducto}")
-    public ProductoFerreteriaResponse obtenerMaterialPorId(@PathVariable Integer idProducto) {
-        return ferreteriaService.obtenerMaterialPorId(idProducto);
-    }
-
-    @PostMapping("/ferreterias/cotizar")
-    public List<CotizacionFerreteriaResponse> cotizarMateriales(
-            @RequestBody CotizacionRequest request
-    ) {
-        return ferreteriaService.cotizarMateriales(request);
-    }
+    
 }
