@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
-const USUARIO_API_URL = "http://localhost:8084/api";
+const USUARIO_API_URL =
+  import.meta.env.VITE_USUARIO_API_URL || "http://localhost:8084/api";
 
 export default function Login({ onLogin, onSwitchToRegister }) {
   const [email, setEmail] = useState("");

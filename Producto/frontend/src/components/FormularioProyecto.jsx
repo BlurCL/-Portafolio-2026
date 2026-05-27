@@ -2,8 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { tiposObra, opcionesPorTipo } from "../data/opciones";
 import ComparadorCotizaciones from "./ComparadorCotizaciones";
 
-const CALCULO_API_URL = "http://localhost:8081/api";
-const OBRAS_API_URL = "http://localhost:8082/api";
+const CALCULO_API_URL =
+  import.meta.env.VITE_CALCULO_API_URL || "http://localhost:8081/api";
+
+const OBRAS_API_URL =
+  import.meta.env.VITE_OBRAS_API_URL || "http://localhost:8082/api";
 
 export default function FormularioProyecto({ user }) {
   const [nombreObra, setNombreObra] = useState("");
