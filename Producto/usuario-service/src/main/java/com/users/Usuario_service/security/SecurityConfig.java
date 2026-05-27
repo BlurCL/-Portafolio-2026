@@ -56,10 +56,12 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList(
+        configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:3000",
             "http://localhost:4200",
-            "http://localhost:5173"
+            "http://localhost:5173",
+            "https://front-portafolio-nine.vercel.app",
+            "https://*.vercel.app"
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
