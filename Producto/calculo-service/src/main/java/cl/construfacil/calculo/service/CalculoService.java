@@ -5,6 +5,7 @@ import cl.construfacil.calculo.dto.DetalleCalculoResponse;
 import cl.construfacil.calculo.dto.PresupuestoGuardadoResponse;
 import cl.construfacil.calculo.dto.PresupuestoResumenResponse;
 import cl.construfacil.calculo.repository.CalculoRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,6 +21,9 @@ public class CalculoService {
     private final CalculoRepository calculoRepository;
     private final RestTemplate restTemplate;
 
+    @Value("${obras.service.url:http://localhost:8082}")
+    private String obrasServiceUrl;
+
     public CalculoService(CalculoRepository calculoRepository, RestTemplate restTemplate) {
         this.calculoRepository = calculoRepository;
         this.restTemplate = restTemplate;
@@ -27,9 +31,11 @@ public class CalculoService {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> obtenerObraDesdeServicio(Integer id) {
-        String url = "http://localhost:8082/api/obras/" + id;
+        String url = obrasServiceUrl + "/api/obras/" + id;
+
         Map<String, Object> obra = restTemplate.getForObject(url, Map.class);
 
+        System.out.println("🔥 URL obras-service usada: " + url);
         System.out.println("🔥 Obra recibida desde obras-service: " + obra);
 
         return obra != null ? obra : new HashMap<>();
@@ -231,6 +237,29 @@ public class CalculoService {
         return presupuestos;
     }
 
+    public List<PresupuestoResumenResponse> listarPresupuestosPorUsuario(Integer idUsuario) {
+        List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorUsuario(idUsuario);
+
+        List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
+
+        for (Map<String, Object> fila : filas) {
+            Date fechaSql = (Date) fila.get("fecha_creacion");
+
+            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
+                    ((Number) fila.get("id_presupuesto")).intValue(),
+                    ((Number) fila.get("id_obra")).intValue(),
+                    (String) fila.get("nombre_obra"),
+                    (String) fila.get("nombre_tipo_obra"),
+                    fechaSql != null ? fechaSql.toLocalDate() : null,
+                    redondear(((Number) fila.get("total_presupuesto")).doubleValue())
+            );
+
+            presupuestos.add(resumen);
+        }
+
+        return presupuestos;
+    }
+
     private String obtenerTipoObra(Map<String, Object> obraServicio) {
         Object tipo = obraServicio.get("tipo");
 
@@ -261,10 +290,16 @@ public class CalculoService {
         return medidas;
     }
 
-    private double calcularCantidad(String tipoObra, String material, String unidadCalculo,
-                                    double largo, double ancho, double espesor,
-                                    double alto, double factor) {
-
+    private double calcularCantidad(
+            String tipoObra,
+            String material,
+            String unidadCalculo,
+            double largo,
+            double ancho,
+            double espesor,
+            double alto,
+            double factor
+    ) {
         /*
          * Malla ACMA:
          * Se vende por plancha/unidad.
@@ -345,27 +380,4 @@ public class CalculoService {
     private double redondear(double valor) {
         return Math.round(valor * 100.0) / 100.0;
     }
-
-    public List<PresupuestoResumenResponse> listarPresupuestosPorUsuario(Integer idUsuario) {
-    List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorUsuario(idUsuario);
-
-    List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
-
-    for (Map<String, Object> fila : filas) {
-        Date fechaSql = (Date) fila.get("fecha_creacion");
-
-        PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
-                ((Number) fila.get("id_presupuesto")).intValue(),
-                ((Number) fila.get("id_obra")).intValue(),
-                (String) fila.get("nombre_obra"),
-                (String) fila.get("nombre_tipo_obra"),
-                fechaSql != null ? fechaSql.toLocalDate() : null,
-                redondear(((Number) fila.get("total_presupuesto")).doubleValue())
-        );
-
-        presupuestos.add(resumen);
-    }
-
-    return presupuestos;
-}
 }
