@@ -3,8 +3,11 @@ import React, { useEffect, useMemo, useState } from "react";
 const FERRETERIA_API_URL =
   import.meta.env.VITE_FERRETERIA_API_URL || "http://localhost:8083/api";
 
-const FERRETERIA_FRONT_URL =
-  import.meta.env.VITE_FERRETERIA_FRONT_URL || "";
+const FERRETERIA_UNO_FRONT_URL =
+  import.meta.env.VITE_FERRETERIA_UNO_FRONT_URL || "";
+
+const FERRETERIA_DOS_FRONT_URL =
+  import.meta.env.VITE_FERRETERIA_DOS_FRONT_URL || "";
 
 export default function ComparadorCotizaciones({ materiales = [] }) {
   const [cotizaciones, setCotizaciones] = useState([]);
@@ -68,7 +71,6 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
         }
 
         const data = await response.json();
-
         setCotizaciones(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error cotizando en ferreterías:", error);
@@ -110,19 +112,36 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
     );
   };
 
+  const obtenerUrlFerreteria = (cotizacion) => {
+    const codigo = cotizacion.codigoFerreteria;
+
+    if (codigo === "FERRETERIA_UNO") {
+      return FERRETERIA_UNO_FRONT_URL;
+    }
+
+    if (codigo === "FERRETERIA_DOS") {
+      return FERRETERIA_DOS_FRONT_URL;
+    }
+
+    return "";
+  };
+
   const handlePago = (cotizacion) => {
     setSeleccionada(cotizacion.nombreFerreteria);
 
-    if (!FERRETERIA_FRONT_URL) {
+    const urlFerreteria = obtenerUrlFerreteria(cotizacion);
+
+    if (!urlFerreteria) {
       alert(
-        "Falta configurar la URL del carrito de la ferretería. Agrega VITE_FERRETERIA_FRONT_URL en el archivo .env del frontend."
+        `Falta configurar la URL del carrito para ${cotizacion.nombreFerreteria}.`
       );
       return;
     }
 
     const carritoCodificado = codificarCarrito(cotizacion);
+    const separador = urlFerreteria.endsWith("/") ? "" : "/";
 
-    window.location.href = `${FERRETERIA_FRONT_URL}/carrito?items=${carritoCodificado}`;
+    window.location.href = `${urlFerreteria}${separador}carrito?items=${carritoCodificado}`;
   };
 
   if (!materiales.length || totalBase <= 0) {
