@@ -140,8 +140,7 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
 
     const carritoCodificado = codificarCarrito(cotizacion);
     const separador = urlFerreteria.endsWith("/") ? "" : "/";
-
-    window.location.href = `${urlFerreteria}${separador}carrito?items=${carritoCodificado}`;
+    window.location.href = `${urlFerreteria}?items=${carritoCodificado}`;
   };
 
   if (!materiales.length || totalBase <= 0) {
