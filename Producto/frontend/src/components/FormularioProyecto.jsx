@@ -64,7 +64,6 @@ export default function FormularioProyecto({ user }) {
       if (!valorAlto || valorAlto <= 0) {
         return 0;
       }
-
       return valorLargo * valorAlto;
     }
 
@@ -144,7 +143,6 @@ export default function FormularioProyecto({ user }) {
       }
 
       const data = await response.json();
-
       setHistorial(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error cargando historial desde BD:", error);
@@ -500,7 +498,6 @@ export default function FormularioProyecto({ user }) {
           Tipo de obra
           <select value={tipo} onChange={handleTipoChange}>
             <option value="">Seleccione</option>
-
             {tiposObra.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -521,7 +518,6 @@ export default function FormularioProyecto({ user }) {
             disabled={!tipo}
           >
             <option value="">Seleccione</option>
-
             {opciones.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -596,9 +592,11 @@ export default function FormularioProyecto({ user }) {
             {loading ? "Generando presupuesto..." : "Calcular presupuesto"}
           </button>
 
-          <button type="button" onClick={guardarBorrador}>
-            Guardar borrador
-          </button>
+          {resultado && (
+            <button type="button" onClick={guardarBorrador}>
+              Guardar borrador
+            </button>
+          )}
 
           <button type="button" onClick={limpiarFormulario}>
             Limpiar
@@ -660,13 +658,9 @@ export default function FormularioProyecto({ user }) {
               {historial.map((item) => (
                 <li key={item.idPresupuesto}>
                   <strong>{item.nombreObra || "Obra sin nombre"}</strong>
-
                   <span> | ID: {item.idPresupuesto}</span>
-
                   <span> | Tipo: {item.tipoObra || "Sin tipo"}</span>
-
                   <span> | Total: {formatCLP(item.totalPresupuesto)}</span>
-
                   <span> | Fecha: {formatFecha(item.fechaCreacion)}</span>
 
                   <div className="button-row small">

@@ -73,69 +73,20 @@ function App() {
 
   if (!user && authView === "initial" && !showCotizacionAnonima) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: 40,
-            borderRadius: 16,
-            boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-            textAlign: "center",
-            maxWidth: 400,
-            width: "90%",
-          }}
-        >
-          <h1 style={{ color: "#333", marginBottom: 8, fontSize: 28 }}>
-            ConstruFácil
-          </h1>
+      <div className="auth-wrapper">
+        <div className="auth-card">
+          <h1 className="auth-title">ConstruFácil</h1>
+          <p className="auth-subtitle">Gestión de proyectos de construcción</p>
 
-          <p style={{ color: "#666", marginBottom: 32 }}>
-            Gestión de proyectos de construcción
-          </p>
-
-          <button
-            onClick={() => setShowCotizacionAnonima(true)}
-            style={{
-              width: "100%",
-              padding: "14px 24px",
-              fontSize: 16,
-              fontWeight: "bold",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              marginBottom: 16,
-            }}
-          >
+          <button className="auth-button" onClick={() => setShowCotizacionAnonima(true)}>
             Generar Cotización
           </button>
 
           <button
+            className="auth-button-secondary"
             onClick={() => {
               setAuthView("login");
               setShowCotizacionAnonima(false);
-            }}
-            style={{
-              width: "100%",
-              padding: "14px 24px",
-              fontSize: 16,
-              fontWeight: "bold",
-              background: "transparent",
-              color: "#667eea",
-              border: "2px solid #667eea",
-              borderRadius: 8,
-              cursor: "pointer",
-              marginBottom: 16,
             }}
           >
             Iniciar Sesión / Registrarse
@@ -167,18 +118,16 @@ function App() {
     return (
       <div className="app-container">
         <div className="main-content">
-          <h1 style={{ textAlign: "center" }}>ConstruFácil</h1>
-
-          <p style={{ textAlign: "center" }}>
+          <h1 className="text-center">ConstruFácil</h1>
+          <p className="text-center">
             Calcula la superficie de tu proyecto y selecciona el tipo de obra
           </p>
-
           <button onClick={() => setShowCotizacionAnonima(false)}>
             Volver
           </button>
         </div>
 
-        <div className="main-content">
+        <div className="main-content mt-10">
           <div className="card">
             <FormularioProyecto user={null} />
           </div>
@@ -190,20 +139,23 @@ function App() {
   return (
     <div className="app-container">
       <div className="main-content">
-        <h1 style={{ textAlign: "center" }}>ConstruFácil</h1>
+        
+        <div className="header-wrapper">
+          <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
+          <button className="btn-logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </div>
 
-        <p style={{ textAlign: "center" }}>
+        <p className="text-center mt-10">
           Calcula la superficie de tu proyecto y selecciona el tipo de obra
         </p>
-
-        <p style={{ marginTop: "10px", textAlign: "center" }}>
+        <p className="text-center mt-10">
           Bienvenido, <strong>{user.nombre || user.nombreUsuario || user.correo}</strong>
         </p>
-
-        <button onClick={handleLogout}>Cerrar sesión</button>
       </div>
 
-      <div className="main-content">
+      <div className="main-content mt-10">
         <div className="card">
           <FormularioProyecto user={user} />
         </div>

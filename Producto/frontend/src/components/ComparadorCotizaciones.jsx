@@ -176,7 +176,14 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
                 cotizacion.masConveniente ? "mas-economica" : ""
               }`}
             >
-              <h4>{cotizacion.nombreFerreteria}</h4>
+              {/* Aquí aplicamos la nueva clase para que flote arriba */}
+              {cotizacion.masConveniente && (
+                <div className="badge-economica">
+                  ¡Más económica!
+                </div>
+              )}
+
+              <h4 style={{ marginTop: 0 }}>{cotizacion.nombreFerreteria}</h4>
 
               <p>
                 <strong>Comuna:</strong> {cotizacion.comuna || "No informada"}
@@ -201,12 +208,6 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
                 <strong>Total:</strong>{" "}
                 {formatCLP(cotizacion.totalCotizacion)}
               </p>
-
-              {cotizacion.masConveniente && (
-                <p style={{ color: "green", fontWeight: "bold" }}>
-                  ¡Más económica!
-                </p>
-              )}
 
               {Array.isArray(cotizacion.detalle) &&
                 cotizacion.detalle.length > 0 && (
