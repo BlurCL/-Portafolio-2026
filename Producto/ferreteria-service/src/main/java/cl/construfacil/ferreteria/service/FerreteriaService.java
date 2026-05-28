@@ -259,5 +259,31 @@ public class FerreteriaService {
         }
     }
 
-    
+    private FerreteriaResponse mapearFerreteria(Ferreteria ferreteria) {
+        return new FerreteriaResponse(
+                ferreteria.getIdFerreteria(),
+                ferreteria.getCodigoFerreteria(),
+                ferreteria.getNombreFerreteria(),
+                ferreteria.getComuna(),
+                ferreteria.getDireccion(),
+                ferreteria.getCostoDespacho(),
+                ferreteria.getActiva()
+        );
+    }
+
+    private ProductoFerreteriaResponse mapearProducto(ProductoFerreteria producto) {
+        Ferreteria ferreteria = producto.getFerreteria();
+
+        return new ProductoFerreteriaResponse(
+                producto.getIdProducto(),
+                ferreteria.getCodigoFerreteria(),
+                ferreteria.getNombreFerreteria(),
+                producto.getNombreProducto(),
+                producto.getDescripcionProducto(),
+                producto.getUnidadVenta(),
+                producto.getPrecioUnitario(),
+                producto.getStock(),
+                producto.getActivo()
+        );
+    }
 }
