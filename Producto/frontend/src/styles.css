@@ -25,14 +25,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* Permite un flujo natural hacia abajo con el pie de página */
   min-height: 100vh;
-  padding: 20px;
+  padding: 20px 0 0 0; /* Ajustamos padding para que el footer llegue al borde inferior */
 }
 
 .main-content {
   width: 100%;
   max-width: 800px;
+  padding: 0 20px;
 }
 
 /* --- Cabecera Superior (Título + Botón) --- */
@@ -49,6 +50,8 @@ body {
 .btn-logout {
   position: absolute;
   right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: auto;
   padding: 10px 20px;
   font-size: 1rem;
@@ -307,7 +310,7 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr;
   gap: 15px;
-  margin-top: 25px; /* Damos un poco más de margen arriba para las etiquetas */
+  margin-top: 25px;
 }
 @media (min-width: 720px) {
   .cotizaciones-grid {
@@ -316,8 +319,8 @@ button:disabled {
 }
 
 .cotizacion-card {
-  position: relative; /* Esto es clave para que la etiqueta flote aquí */
-  padding: 25px 15px 15px 15px; /* Más padding arriba para no chocar con la etiqueta */
+  position: relative;
+  padding: 25px 15px 15px 15px;
   border: 1px solid #cbd5e1;
   border-radius: 16px;
   background: white;
@@ -333,11 +336,10 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
 }
 
-/* LA NUEVA ETIQUETA FLOTANTE */
 .badge-economica {
   position: absolute;
-  top: -12px; /* La sube justo a la altura del borde */
-  left: 15px; /* Alineada a la izquierda */
+  top: -12px;
+  left: 15px;
   background: #22c55e;
   color: white;
   padding: 4px 12px;
@@ -359,4 +361,33 @@ button:disabled {
 .detalle-cotizacion ul {
   padding-left: 20px;
   font-size: 0.9rem;
+}
+
+/* --- NUEVO PIE DE PÁGINA (FOOTER) --- */
+.app-footer {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Morado exacto del login */
+  color: #ffffff;
+  padding: 30px 20px;
+  margin-top: 50px; /* Separación prudente del contenido principal */
+  display: flex;
+  justify-content: center;
+}
+
+.app-footer-content {
+  width: 100%;
+  max-width: 800px; /* Alineado perfectamente con el ancho de las tarjetas */
+  font-size: 0.85rem;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.app-footer-content p {
+  margin: 0 0 14px 0;
+}
+
+.app-footer-content p:last-child {
+  margin-bottom: 0;
+  font-weight: 500;
+  opacity: 0.9;
 }

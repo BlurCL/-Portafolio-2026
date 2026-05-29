@@ -78,9 +78,6 @@ function App() {
           <h1 className="auth-title">ConstruFácil</h1>
           <p className="auth-subtitle">Gestión de proyectos de construcción</p>
 
-          {/* El botón de Generar Cotización fue eliminado de aquí */}
-
-          {/* El botón de Iniciar Sesión ahora es el principal (auth-button) */}
           <button
             className="auth-button"
             onClick={() => {
@@ -131,6 +128,17 @@ function App() {
             <FormularioProyecto user={null} />
           </div>
         </div>
+
+        <footer className="app-footer">
+          <div className="app-footer-content">
+            <p>
+              ConstruFácil se tomó como referencia la Norma Chilena NCh353:2018, Construcción – Cubicación de obras de edificación – Metodología de cálculo – Requisitos, elaborada por el Instituto Nacional de Normalización. Esta norma establece criterios para determinar cantidades de partidas de obras de edificación, lo que permite justificar el uso de unidades como metros cúbicos, metros cuadrados, metros lineales y unidades en la estimación de materiales.
+            </p>
+            <p>
+              El sistema no reemplaza una cubicación profesional ni un presupuesto técnico definitivo, sino que aplica reglas simplificadas basadas en criterios de medición usados en construcción.
+            </p>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -140,12 +148,10 @@ function App() {
       <div className="main-content">
         
         <div className="header-wrapper">
-          <div className="header-title-container">
-            <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
-            <button className="btn-logout" onClick={handleLogout}>
-              Cerrar sesión
-            </button>
-          </div>
+          <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
+          <button className="btn-logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
         </div>
 
         <p className="text-center mt-10">
@@ -161,8 +167,19 @@ function App() {
           <FormularioProyecto user={user} />
         </div>
       </div>
+
+      <footer className="app-footer">
+        <div className="app-footer-content">
+          <p>
+ConstruFácil se basa en la norma chilena NCh353:2018 para estimar materiales de construcción utilizando medidas como metros cúbicos, cuadrados y lineales.          </p>
+          <p>
+El sistema solo aplica reglas simplificadas y no reemplaza una cubicación o presupuesto profesional.          </p>
+        </div>
+      </footer>
     </div>
   );
 }
 
 export default App;
+
+
