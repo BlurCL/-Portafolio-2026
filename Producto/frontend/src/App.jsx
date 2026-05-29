@@ -78,12 +78,11 @@ function App() {
           <h1 className="auth-title">ConstruFácil</h1>
           <p className="auth-subtitle">Gestión de proyectos de construcción</p>
 
-          <button className="auth-button" onClick={() => setShowCotizacionAnonima(true)}>
-            Generar Cotización
-          </button>
+          {/* El botón de Generar Cotización fue eliminado de aquí */}
 
+          {/* El botón de Iniciar Sesión ahora es el principal (auth-button) */}
           <button
-            className="auth-button-secondary"
+            className="auth-button"
             onClick={() => {
               setAuthView("login");
               setShowCotizacionAnonima(false);
@@ -141,10 +140,12 @@ function App() {
       <div className="main-content">
         
         <div className="header-wrapper">
-          <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
-          <button className="btn-logout" onClick={handleLogout}>
-            Cerrar sesión
-          </button>
+          <div className="header-title-container">
+            <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
+            <button className="btn-logout" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
         <p className="text-center mt-10">
