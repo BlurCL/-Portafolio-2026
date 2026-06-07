@@ -401,7 +401,7 @@ export default function FormularioProyecto({ user }) {
     return "unidades";
   };
 
-  const obtenerCantidadRecomendada = (cantidad) => {
+  const obtenerCantidadCompra = (cantidad) => {
     const numero = Number(cantidad || 0);
 
     if (numero <= 0) return 0;
@@ -409,14 +409,17 @@ export default function FormularioProyecto({ user }) {
     return Math.ceil(numero);
   };
 
-  const formatearCantidadCalculada = (cantidad) => {
-    const numero = Number(cantidad || 0);
+  const calcularSubtotalCompra = (material) => {
+    const cantidadCompra = obtenerCantidadCompra(material.cantidad);
+    const precioUnitario = Number(material.precioUnitario || 0);
 
-    if (Number.isInteger(numero)) {
-      return numero.toString();
-    }
+    return cantidadCompra * precioUnitario;
+  };
 
-    return numero.toFixed(2).replace(".", ",");
+  const calcularTotalCompra = (detalle = []) => {
+    return detalle.reduce((total, material) => {
+      return total + calcularSubtotalCompra(material);
+    }, 0);
   };
 
   const mostrarSubtipo = (subtipoResultado) => {
@@ -751,16 +754,13 @@ export default function FormularioProyecto({ user }) {
                         Material
                       </th>
                       <th style={{ textAlign: "left", padding: "10px" }}>
-                        Cantidad calculada
-                      </th>
-                      <th style={{ textAlign: "left", padding: "10px" }}>
-                        Cantidad recomendada para compra
+                        Cantidad para compra
                       </th>
                       <th style={{ textAlign: "left", padding: "10px" }}>
                         Precio unitario
                       </th>
                       <th style={{ textAlign: "left", padding: "10px" }}>
-                        Subtotal estimado
+                        Subtotal
                       </th>
                     </tr>
                   </thead>
@@ -769,7 +769,7 @@ export default function FormularioProyecto({ user }) {
                     {detalleResultado.map((material, index) => {
                       const nombreMaterial = obtenerNombreMaterial(material);
                       const unidad = obtenerUnidadComercial(nombreMaterial);
-                      const cantidadRecomendada = obtenerCantidadRecomendada(
+                      const cantidadCompra = obtenerCantidadCompra(
                         material.cantidad
                       );
 
@@ -790,17 +790,7 @@ export default function FormularioProyecto({ user }) {
                               borderTop: "1px solid #cbd5e1",
                             }}
                           >
-                            {formatearCantidadCalculada(material.cantidad)}{" "}
-                            {unidad}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: "10px",
-                              borderTop: "1px solid #cbd5e1",
-                            }}
-                          >
-                            {cantidadRecomendada} {unidad}
+                            {cantidadCompra} {unidad}
                           </td>
 
                           <td
@@ -818,7 +808,7 @@ export default function FormularioProyecto({ user }) {
                               borderTop: "1px solid #cbd5e1",
                             }}
                           >
-                            {formatCLP(material.subtotal)}
+                            {formatCLP(calcularSubtotalCompra(material))}
                           </td>
                         </tr>
                       );
@@ -832,15 +822,16 @@ export default function FormularioProyecto({ user }) {
                     fontSize: "0.9rem",
                   }}
                 >
-                  Las cantidades recomendadas se redondean hacia arriba para
-                  considerar unidades comerciales de compra.
+                  Las cantidades se redondean hacia arriba porque los materiales
+                  se compran en unidades comerciales completas.
                 </p>
               </div>
             )}
 
             <p className="costo-total">
               <strong>
-                Total estimado de materiales: {formatCLP(resultado.total)}
+                Total estimado de compra:{" "}
+                {formatCLP(calcularTotalCompra(detalleResultado))}
               </strong>
             </p>
 
@@ -848,9 +839,9 @@ export default function FormularioProyecto({ user }) {
               <ComparadorCotizaciones
                 materiales={detalleResultado.map((item) => ({
                   nombre: obtenerNombreMaterial(item),
-                  cantidad: item.cantidad,
+                  cantidad: obtenerCantidadCompra(item.cantidad),
                   precioUnitario: item.precioUnitario,
-                  subtotal: item.subtotal,
+                  subtotal: calcularSubtotalCompra(item),
                 }))}
               />
             )}
