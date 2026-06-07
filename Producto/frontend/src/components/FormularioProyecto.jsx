@@ -30,7 +30,12 @@ export default function FormularioProyecto({ user }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setObraData((prev) => ({ ...prev, [name]: value }));
+
+    setObraData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
     setResultado(null);
     setError("");
   };
@@ -52,6 +57,7 @@ export default function FormularioProyecto({ user }) {
 
   useEffect(() => {
     let altoDefecto = "";
+
     if (tipo === "Radier") altoDefecto = "0.1";
     if (tipo === "Tabique") altoDefecto = "2.4";
 
@@ -60,6 +66,7 @@ export default function FormularioProyecto({ user }) {
       subtipo: "",
       alto: altoDefecto,
     }));
+
     setResultado(null);
     setError("");
   }, [tipo]);
@@ -79,32 +86,60 @@ export default function FormularioProyecto({ user }) {
     }
 
     if (!valorAncho || valorAncho <= 0) return 0;
+
     return valorLargo * valorAncho;
   }, [tipo, largo, ancho, alto]);
 
   const requiereAlto = tipo === "Radier" || tipo === "Tabique";
-  const etiquetaAlto = tipo === "Radier" ? "Espesor en metros" : tipo === "Tabique" ? "Alto en metros" : "";
-  const placeholderAlto = tipo === "Radier" ? "Ej: 0.1" : tipo === "Tabique" ? "Ej: 2.4" : "";
+
+  const etiquetaAlto =
+    tipo === "Radier"
+      ? "Espesor en metros"
+      : tipo === "Tabique"
+      ? "Alto en metros"
+      : "";
+
+  const placeholderAlto =
+    tipo === "Radier"
+      ? "Ej: 0.1"
+      : tipo === "Tabique"
+      ? "Ej: 2.4"
+      : "";
 
   const obtenerIdCliente = () => {
-    const id = localStorage.getItem("idCliente") || localStorage.getItem("id_cliente") || user?.idCliente || user?.id_cliente;
+    const id =
+      localStorage.getItem("idCliente") ||
+      localStorage.getItem("id_cliente") ||
+      user?.idCliente ||
+      user?.id_cliente;
+
     return id ? Number(id) : null;
   };
 
   const obtenerIdUsuario = () => {
-    const id = localStorage.getItem("idUsuario") || localStorage.getItem("id_usuario") || user?.idUsuario || user?.id_usuario;
+    const id =
+      localStorage.getItem("idUsuario") ||
+      localStorage.getItem("id_usuario") ||
+      user?.idUsuario ||
+      user?.id_usuario;
+
     return id ? Number(id) : null;
   };
 
   const cargarHistorialBD = async () => {
     setLoadingHistorial(true);
     setError("");
+
     try {
       const idUsuario = obtenerIdUsuario();
+
       if (!idUsuario) {
         setHistorial([]);
-        throw new Error("No se encontró el idUsuario del usuario conectado en localStorage.");
+        throw new Error(
+          "No se encontró el idUsuario del usuario conectado en localStorage."
+        );
       }
+
       const data = await proyectoService.obtenerHistorial(idUsuario);
       setHistorial(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -118,6 +153,7 @@ export default function FormularioProyecto({ user }) {
   const toggleHistorial = async () => {
     const nuevoEstado = !showHistorial;
     setShowHistorial(nuevoEstado);
+
     if (nuevoEstado) {
       await cargarHistorialBD();
     }
@@ -126,8 +162,12 @@ export default function FormularioProyecto({ user }) {
   const verDetallePresupuesto = async (itemHistorial) => {
     setLoading(true);
     setError("");
+
     try {
-      const data = await proyectoService.obtenerDetallePresupuesto(itemHistorial.idPresupuesto);
+      const data = await proyectoService.obtenerDetallePresupuesto(
+        itemHistorial.idPresupuesto
+      );
+
       setResultado({
         origen: "backend",
         idPresupuesto: data.idPresupuesto || itemHistorial.idPresupuesto,
@@ -135,11 +175,18 @@ export default function FormularioProyecto({ user }) {
         nombreObra: itemHistorial.nombreObra || "Obra sin nombre",
         tipoObra: data.tipoObra || itemHistorial.tipoObra,
         subtipo: "Presupuesto guardado",
-        largo: null, ancho: null, alto: null, superficie: null,
+        largo: null,
+        ancho: null,
+        alto: null,
+        superficie: null,
         detalle: Array.isArray(data.detalle) ? data.detalle : [],
         total: data.total || itemHistorial.totalPresupuesto || 0,
       });
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth",
+      });
     } catch (error) {
       console.error("Error cargando detalle del presupuesto:", error);
       setError("No se pudo cargar el detalle del presupuesto seleccionado.");
@@ -160,8 +207,12 @@ export default function FormularioProyecto({ user }) {
     };
 
     const nuevosBorradores = [...borradores, borrador];
+
     setBorradores(nuevosBorradores);
-    localStorage.setItem(`borradores_${userKey}`, JSON.stringify(nuevosBorradores));
+    localStorage.setItem(
+      `borradores_${userKey}`,
+      JSON.stringify(nuevosBorradores)
+    );
 
     setError("");
     alert("Borrador guardado correctamente.");
@@ -176,14 +227,19 @@ export default function FormularioProyecto({ user }) {
       ancho: borrador.ancho || "",
       alto: borrador.alto || "",
     });
+
     setResultado(null);
     setError("");
   };
 
   const eliminarBorrador = (index) => {
     const nuevosBorradores = borradores.filter((_, i) => i !== index);
+
     setBorradores(nuevosBorradores);
-    localStorage.setItem(`borradores_${userKey}`, JSON.stringify(nuevosBorradores));
+    localStorage.setItem(
+      `borradores_${userKey}`,
+      JSON.stringify(nuevosBorradores)
+    );
   };
 
   const validarFormulario = () => {
@@ -192,9 +248,17 @@ export default function FormularioProyecto({ user }) {
     if (!subtipo) return "Debes seleccionar un subtipo.";
     if (!largo || Number(largo) <= 0) return "Debes ingresar un largo válido.";
     if (!ancho || Number(ancho) <= 0) return "Debes ingresar un ancho válido.";
-    if (tipo === "Radier" && (!alto || Number(alto) <= 0)) return "Debes ingresar un espesor válido para el radier.";
-    if (tipo === "Tabique" && (!alto || Number(alto) <= 0)) return "Debes ingresar un alto válido para el tabique.";
+
+    if (tipo === "Radier" && (!alto || Number(alto) <= 0)) {
+      return "Debes ingresar un espesor válido para el radier.";
+    }
+
+    if (tipo === "Tabique" && (!alto || Number(alto) <= 0)) {
+      return "Debes ingresar un alto válido para el tabique.";
+    }
+
     if (superficie <= 0) return "La superficie debe ser mayor a cero.";
+
     return "";
   };
 
@@ -202,6 +266,7 @@ export default function FormularioProyecto({ user }) {
     e.preventDefault();
 
     const mensajeError = validarFormulario();
+
     if (mensajeError) {
       setError(mensajeError);
       return;
@@ -220,16 +285,27 @@ export default function FormularioProyecto({ user }) {
         nombre: nombreObra.trim(),
         nombreObra: nombreObra.trim(),
         nombre_obra: nombreObra.trim(),
-        idCliente, id_cliente: idCliente,
-        idUsuario, id_usuario: idUsuario,
+
+        idCliente,
+        id_cliente: idCliente,
+
+        idUsuario,
+        id_usuario: idUsuario,
+
         usuarioEmail: user?.email || user?.correo || null,
         usuario_email: user?.email || user?.correo || null,
-        tipo, tipoObra: tipo, tipo_obra: tipo,
+
+        tipo,
+        tipoObra: tipo,
+        tipo_obra: tipo,
+
         subtipo,
+
         largo: Number(largo),
         ancho: Number(ancho),
         alto: altoMapeado,
         superficie,
+
         medidas: {
           largo: Number(largo),
           ancho: Number(ancho),
@@ -238,7 +314,13 @@ export default function FormularioProyecto({ user }) {
       };
 
       const dataObra = await proyectoService.crearObra(payloadObra);
-      const obraId = dataObra.id || dataObra.obraId || dataObra.obra_id || dataObra.idObra || dataObra.id_obra;
+
+      const obraId =
+        dataObra.id ||
+        dataObra.obraId ||
+        dataObra.obra_id ||
+        dataObra.idObra ||
+        dataObra.id_obra;
 
       if (!obraId) {
         throw new Error("El backend creó la obra, pero no devolvió el ID.");
@@ -248,7 +330,10 @@ export default function FormularioProyecto({ user }) {
 
       setResultado({
         origen: "backend",
-        idPresupuesto: dataPresupuesto.idPresupuesto || dataPresupuesto.id_presupuesto || null,
+        idPresupuesto:
+          dataPresupuesto.idPresupuesto ||
+          dataPresupuesto.id_presupuesto ||
+          null,
         obraId,
         nombreObra: nombreObra.trim(),
         tipoObra: dataPresupuesto.tipoObra || dataPresupuesto.tipo_obra || tipo,
@@ -257,7 +342,9 @@ export default function FormularioProyecto({ user }) {
         ancho: dataPresupuesto.ancho || Number(ancho),
         alto: dataPresupuesto.alto || altoMapeado,
         superficie,
-        detalle: Array.isArray(dataPresupuesto.detalle) ? dataPresupuesto.detalle : [],
+        detalle: Array.isArray(dataPresupuesto.detalle)
+          ? dataPresupuesto.detalle
+          : [],
         total: dataPresupuesto.total || 0,
       });
 
@@ -266,7 +353,9 @@ export default function FormularioProyecto({ user }) {
       }
     } catch (error) {
       console.error("Error generando presupuesto:", error);
-      setError("No se pudo generar el presupuesto. Revisa la conectividad de los microservicios.");
+      setError(
+        "No se pudo generar el presupuesto. Revisa la conectividad de los microservicios."
+      );
     } finally {
       setLoading(false);
     }
@@ -281,69 +370,187 @@ export default function FormularioProyecto({ user }) {
       ancho: "",
       alto: "",
     });
+
     setResultado(null);
     setError("");
   };
 
+  const obtenerNombreMaterial = (material) => {
+    return (
+      material.material ||
+      material.nombre ||
+      material.nombreMaterial ||
+      material.nombre_material ||
+      "Material sin nombre"
+    );
+  };
+
+  const obtenerUnidadComercial = (nombre = "") => {
+    const texto = nombre.toLowerCase();
+
+    if (texto.includes("cemento")) return "sacos";
+    if (texto.includes("arena")) return "m³";
+    if (texto.includes("grava")) return "m³";
+    if (texto.includes("malla")) return "unidades";
+    if (texto.includes("tornillo")) return "unidades";
+    if (texto.includes("zinc")) return "planchas";
+    if (texto.includes("costanera")) return "unidades";
+    if (texto.includes("perfil")) return "unidades";
+    if (texto.includes("yeso")) return "planchas";
+
+    return "unidades";
+  };
+
+  const obtenerCantidadRecomendada = (cantidad) => {
+    const numero = Number(cantidad || 0);
+
+    if (numero <= 0) return 0;
+
+    return Math.ceil(numero);
+  };
+
+  const formatearCantidadCalculada = (cantidad) => {
+    const numero = Number(cantidad || 0);
+
+    if (Number.isInteger(numero)) {
+      return numero.toString();
+    }
+
+    return numero.toFixed(2).replace(".", ",");
+  };
+
+  const mostrarSubtipo = (subtipoResultado) => {
+    if (!subtipoResultado) return false;
+    if (subtipoResultado === "Presupuesto guardado") return false;
+
+    return true;
+  };
+
+  const tieneSuperficieValida = (valorSuperficie) => {
+    return valorSuperficie !== null && Number(valorSuperficie) > 0;
+  };
+
+  const detalleResultado = Array.isArray(resultado?.detalle)
+    ? resultado.detalle
+    : [];
+
   return (
     <section className="card">
       <h2>Formulario de proyecto</h2>
-      <p>Ingresa los datos de la obra para calcular materiales y generar un presupuesto. El sistema guardará la obra automáticamente.</p>
+
+      <p>
+        Ingresa los datos de la obra para calcular materiales y generar un
+        presupuesto. El sistema guardará la obra automáticamente.
+      </p>
 
       {error && <div className="alert-error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="form-grid">
         <label>
           Nombre de la obra
-          <input type="text" name="nombreObra" value={nombreObra} onChange={handleInputChange} placeholder="Ej: Radier patio" />
+          <input
+            type="text"
+            name="nombreObra"
+            value={nombreObra}
+            onChange={handleInputChange}
+            placeholder="Ej: Radier patio"
+          />
         </label>
 
         <label>
           Tipo de obra
           <select name="tipo" value={tipo} onChange={handleInputChange}>
             <option value="">Seleccione</option>
+
             {tiposObra.map((item) => (
-              <option key={item} value={item}>{item}</option>
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
         </label>
 
         <label>
           Subtipo
-          <select name="subtipo" value={subtipo} onChange={handleInputChange} disabled={!tipo}>
+          <select
+            name="subtipo"
+            value={subtipo}
+            onChange={handleInputChange}
+            disabled={!tipo}
+          >
             <option value="">Seleccione</option>
+
             {opciones.map((item) => (
-              <option key={item} value={item}>{item}</option>
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
         </label>
 
         <label>
           Largo en metros
-          <input type="number" name="largo" min="0" step="0.01" value={largo} onChange={handleInputChange} placeholder="Ej: 5" />
+          <input
+            type="number"
+            name="largo"
+            min="0"
+            step="0.01"
+            value={largo}
+            onChange={handleInputChange}
+            placeholder="Ej: 5"
+          />
         </label>
 
         <label>
           Ancho en metros
-          <input type="number" name="ancho" min="0" step="0.01" value={ancho} onChange={handleInputChange} placeholder="Ej: 3" />
+          <input
+            type="number"
+            name="ancho"
+            min="0"
+            step="0.01"
+            value={ancho}
+            onChange={handleInputChange}
+            placeholder="Ej: 3"
+          />
         </label>
 
         {requiereAlto && (
           <label>
             {etiquetaAlto}
-            <input type="number" name="alto" min="0" step={tipo === "Radier" ? "0.01" : "0.1"} value={alto} onChange={handleInputChange} placeholder={placeholderAlto} />
+            <input
+              type="number"
+              name="alto"
+              min="0"
+              step={tipo === "Radier" ? "0.01" : "0.1"}
+              value={alto}
+              onChange={handleInputChange}
+              placeholder={placeholderAlto}
+            />
           </label>
         )}
 
         <div className="button-row">
-          <button type="submit" disabled={loading || !nombreObra.trim() || !tipo || !subtipo || !largo || !ancho || (requiereAlto && !alto)}>
+          <button
+            type="submit"
+            disabled={
+              loading ||
+              !nombreObra.trim() ||
+              !tipo ||
+              !subtipo ||
+              !largo ||
+              !ancho ||
+              (requiereAlto && !alto)
+            }
+          >
             {loading ? "Generando presupuesto..." : "Calcular presupuesto"}
           </button>
+
           {resultado && (
             <button type="button" onClick={guardarBorrador}>
               Guardar borrador
             </button>
           )}
+
           <button type="button" onClick={limpiarFormulario}>
             Limpiar
           </button>
@@ -351,19 +558,45 @@ export default function FormularioProyecto({ user }) {
       </form>
 
       <div className="info-panel">
-        <p><strong>Obra:</strong> {nombreObra || "No ingresada"}</p>
-        <p><strong>Tipo seleccionado:</strong> {tipo || "No elegido"}</p>
-        <p><strong>Subtipo:</strong> {subtipo || "No elegido"}</p>
-        <p><strong>Superficie:</strong> {superficie > 0 ? `${superficie.toFixed(2)} m²` : "--"}</p>
-        {tipo === "Radier" && <p><strong>Espesor:</strong> {alto ? `${alto} m` : "--"}</p>}
-        {tipo === "Tabique" && <p><strong>Alto:</strong> {alto ? `${alto} m` : "--"}</p>}
+        <p>
+          <strong>Obra:</strong> {nombreObra || "No ingresada"}
+        </p>
+
+        <p>
+          <strong>Tipo seleccionado:</strong> {tipo || "No elegido"}
+        </p>
+
+        <p>
+          <strong>Subtipo:</strong> {subtipo || "No elegido"}
+        </p>
+
+        <p>
+          <strong>Superficie:</strong>{" "}
+          {superficie > 0 ? `${superficie.toFixed(2)} m²` : "--"}
+        </p>
+
+        {tipo === "Radier" && (
+          <p>
+            <strong>Espesor:</strong> {alto ? `${alto} m` : "--"}
+          </p>
+        )}
+
+        {tipo === "Tabique" && (
+          <p>
+            <strong>Alto:</strong> {alto ? `${alto} m` : "--"}
+          </p>
+        )}
       </div>
 
       <div className="button-row">
         <button type="button" onClick={toggleHistorial}>
           {showHistorial ? "Ocultar historial" : "Ver historial"}
         </button>
-        <button type="button" onClick={() => setShowBorradores(!showBorradores)}>
+
+        <button
+          type="button"
+          onClick={() => setShowBorradores(!showBorradores)}
+        >
           {showBorradores ? "Ocultar borradores" : "Ver borradores"}
         </button>
       </div>
@@ -371,6 +604,7 @@ export default function FormularioProyecto({ user }) {
       {showHistorial && (
         <div className="historial-section">
           <h3>Historial de presupuestos guardados</h3>
+
           {loadingHistorial ? (
             <p>Cargando historial...</p>
           ) : historial.length === 0 ? (
@@ -383,9 +617,18 @@ export default function FormularioProyecto({ user }) {
                   <span> | ID: {item.idPresupuesto}</span>
                   <span> | Tipo: {item.tipoObra || "Sin tipo"}</span>
                   <span> | Total: {formatCLP(item.totalPresupuesto)}</span>
-                  <span> | Fecha: {formatFecha(item.fechaCreacion || item.fechaCreation)}</span>
+                  <span>
+                    {" "}
+                    | Fecha:{" "}
+                    {formatFecha(item.fechaCreacion || item.fechaCreation)}
+                  </span>
+
                   <div className="button-row small">
-                    <button type="button" onClick={() => verDetallePresupuesto(item)} disabled={loading}>
+                    <button
+                      type="button"
+                      onClick={() => verDetallePresupuesto(item)}
+                      disabled={loading}
+                    >
                       Ver detalle
                     </button>
                   </div>
@@ -399,6 +642,7 @@ export default function FormularioProyecto({ user }) {
       {showBorradores && (
         <div className="borradores-section">
           <h3>Borradores</h3>
+
           {borradores.length === 0 ? (
             <p>No hay borradores guardados.</p>
           ) : (
@@ -406,14 +650,41 @@ export default function FormularioProyecto({ user }) {
               {borradores.map((borrador, index) => (
                 <li key={`${borrador.fecha}_${index}`}>
                   <strong>{borrador.nombreObra || "Obra sin nombre"}</strong>
-                  <span> | {borrador.tipo || "Sin tipo"} - {borrador.subtipo || "Sin subtipo"}</span>
-                  <span> | Medidas: {borrador.largo || "--"} x {borrador.ancho || "--"} m</span>
-                  {borrador.tipo === "Radier" && borrador.alto && <span> | Espesor: {borrador.alto} m</span>}
-                  {borrador.tipo === "Tabique" && borrador.alto && <span> | Alto: {borrador.alto} m</span>}
+                  <span>
+                    {" "}
+                    | {borrador.tipo || "Sin tipo"} -{" "}
+                    {borrador.subtipo || "Sin subtipo"}
+                  </span>
+                  <span>
+                    {" "}
+                    | Medidas: {borrador.largo || "--"} x{" "}
+                    {borrador.ancho || "--"} m
+                  </span>
+
+                  {borrador.tipo === "Radier" && borrador.alto && (
+                    <span> | Espesor: {borrador.alto} m</span>
+                  )}
+
+                  {borrador.tipo === "Tabique" && borrador.alto && (
+                    <span> | Alto: {borrador.alto} m</span>
+                  )}
+
                   <span> | Fecha: {formatFecha(borrador.fecha)}</span>
+
                   <div className="button-row small">
-                    <button type="button" onClick={() => cargarBorrador(borrador)}>Cargar</button>
-                    <button type="button" onClick={() => eliminarBorrador(index)}>Eliminar</button>
+                    <button
+                      type="button"
+                      onClick={() => cargarBorrador(borrador)}
+                    >
+                      Cargar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => eliminarBorrador(index)}
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </li>
               ))}
@@ -425,35 +696,158 @@ export default function FormularioProyecto({ user }) {
       {resultado && (
         <div className="result-box">
           <h3>Presupuesto generado</h3>
-          {resultado.idPresupuesto && <p><strong>ID presupuesto:</strong> {resultado.idPresupuesto}</p>}
-          <p><strong>Obra:</strong> {resultado.nombreObra}</p>
-          <p><strong>Tipo de obra:</strong> {resultado.tipoObra}</p>
-          <p><strong>Subtipo:</strong> {resultado.subtipo}</p>
-          <p><strong>Superficie:</strong> {resultado.superficie ? `${Number(resultado.superficie).toFixed(2)} m²` : "--"}</p>
-          {resultado.tipoObra === "Radier" && resultado.alto > 0 && <p><strong>Espesor:</strong> {resultado.alto} m</p>}
-          {resultado.tipoObra === "Tabique" && resultado.alto > 0 && <p><strong>Alto:</strong> {resultado.alto} m</p>}
+
+          <p>
+            <strong>Obra:</strong> {resultado.nombreObra}
+          </p>
+
+          <p>
+            <strong>Tipo de obra:</strong> {resultado.tipoObra}
+          </p>
+
+          {mostrarSubtipo(resultado.subtipo) && (
+            <p>
+              <strong>Subtipo:</strong> {resultado.subtipo}
+            </p>
+          )}
+
+          {tieneSuperficieValida(resultado.superficie) && (
+            <p>
+              <strong>Superficie:</strong>{" "}
+              {Number(resultado.superficie).toFixed(2)} m²
+            </p>
+          )}
+
+          {resultado.tipoObra === "Radier" && Number(resultado.alto) > 0 && (
+            <p>
+              <strong>Espesor:</strong> {resultado.alto} m
+            </p>
+          )}
+
+          {resultado.tipoObra === "Tabique" && Number(resultado.alto) > 0 && (
+            <p>
+              <strong>Alto:</strong> {resultado.alto} m
+            </p>
+          )}
 
           <div className="materiales-section">
             <h3>Materiales necesarios</h3>
-            {resultado.detalle.length === 0 ? (
+
+            {detalleResultado.length === 0 ? (
               <p>No hay materiales disponibles para mostrar.</p>
             ) : (
-              <ul>
-                {resultado.detalle.map((material, index) => (
-                  <li key={`${material.material}_${index}`}>
-                    <strong>{material.material}</strong> - Cantidad: {material.cantidad} - Precio unitario: {formatCLP(material.precioUnitario)} - Subtotal: {formatCLP(material.subtotal)}
-                  </li>
-                ))}
-              </ul>
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: "12px",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Material
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Cantidad calculada
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Cantidad recomendada para compra
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Precio unitario
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Subtotal estimado
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {detalleResultado.map((material, index) => {
+                      const nombreMaterial = obtenerNombreMaterial(material);
+                      const unidad = obtenerUnidadComercial(nombreMaterial);
+                      const cantidadRecomendada = obtenerCantidadRecomendada(
+                        material.cantidad
+                      );
+
+                      return (
+                        <tr key={`${nombreMaterial}_${index}`}>
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            <strong>{nombreMaterial}</strong>
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {formatearCantidadCalculada(material.cantidad)}{" "}
+                            {unidad}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {cantidadRecomendada} {unidad}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {formatCLP(material.precioUnitario)}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {formatCLP(material.subtotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <p
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Las cantidades recomendadas se redondean hacia arriba para
+                  considerar unidades comerciales de compra.
+                </p>
+              </div>
             )}
+
             <p className="costo-total">
-              <strong>Total estimado: {formatCLP(resultado.total)}</strong>
+              <strong>
+                Total estimado de materiales: {formatCLP(resultado.total)}
+              </strong>
             </p>
 
-            {resultado.detalle.length > 0 && (
+            {detalleResultado.length > 0 && (
               <ComparadorCotizaciones
-                materiales={resultado.detalle.map((item) => ({
-                  nombre: item.material,
+                materiales={detalleResultado.map((item) => ({
+                  nombre: obtenerNombreMaterial(item),
                   cantidad: item.cantidad,
                   precioUnitario: item.precioUnitario,
                   subtotal: item.subtotal,
