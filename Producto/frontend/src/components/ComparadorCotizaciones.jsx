@@ -229,7 +229,7 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
       </p>
 
       <p>
-        <strong>Total base del presupuesto técnico:</strong>{" "}
+        <strong>Total base del presupuesto:</strong>{" "}
         {formatCLP(totalBase)}
       </p>
 
