@@ -32,12 +32,11 @@ public class CalculoService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> obtenerObraDesdeServicio(Integer id) {
         String url = obrasServiceUrl + "/api/obras/" + id;
-
         Map<String, Object> obra = restTemplate.getForObject(url, Map.class);
-
+        
         System.out.println("🔥 URL obras-service usada: " + url);
         System.out.println("🔥 Obra recibida desde obras-service: " + obra);
-
+        
         return obra != null ? obra : new HashMap<>();
     }
 
@@ -79,7 +78,7 @@ public class CalculoService {
 
             detalle.add(new DetalleCalculoResponse(
                     material,
-                    redondear(cantidad),
+                    cantidad, // La cantidad ya viene redondeada por la logica de negocio
                     redondear(precio),
                     redondear(subtotal)
             ));
@@ -129,13 +128,13 @@ public class CalculoService {
 
             filasParaGuardar.add(Map.of(
                     "idMaterial", idMaterial,
-                    "cantidad", redondear(cantidad),
+                    "cantidad", cantidad, // Redondeado constructivamente
                     "subtotal", redondear(subtotal)
             ));
 
             detalle.add(new DetalleCalculoResponse(
                     material,
-                    redondear(cantidad),
+                    cantidad,
                     redondear(precio),
                     redondear(subtotal)
             ));
@@ -176,7 +175,7 @@ public class CalculoService {
 
             detalle.add(new DetalleCalculoResponse(
                     material,
-                    redondear(cantidad),
+                    cantidad,
                     redondear(precio),
                     redondear(subtotal)
             ));
@@ -192,88 +191,45 @@ public class CalculoService {
     }
 
     public List<PresupuestoResumenResponse> listarPresupuestos() {
-        List<Map<String, Object>> filas = calculoRepository.listarPresupuestos();
-
-        List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
-
-        for (Map<String, Object> fila : filas) {
-            Date fechaSql = (Date) fila.get("fecha_creacion");
-
-            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
-                    ((Number) fila.get("id_presupuesto")).intValue(),
-                    ((Number) fila.get("id_obra")).intValue(),
-                    (String) fila.get("nombre_obra"),
-                    (String) fila.get("nombre_tipo_obra"),
-                    fechaSql != null ? fechaSql.toLocalDate() : null,
-                    redondear(((Number) fila.get("total_presupuesto")).doubleValue())
-            );
-
-            presupuestos.add(resumen);
-        }
-
-        return presupuestos;
+        return mapearListaPresupuestos(calculoRepository.listarPresupuestos());
     }
 
     public List<PresupuestoResumenResponse> listarPresupuestosPorCliente(Integer idCliente) {
-        List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorCliente(idCliente);
-
-        List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
-
-        for (Map<String, Object> fila : filas) {
-            Date fechaSql = (Date) fila.get("fecha_creacion");
-
-            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
-                    ((Number) fila.get("id_presupuesto")).intValue(),
-                    ((Number) fila.get("id_obra")).intValue(),
-                    (String) fila.get("nombre_obra"),
-                    (String) fila.get("nombre_tipo_obra"),
-                    fechaSql != null ? fechaSql.toLocalDate() : null,
-                    redondear(((Number) fila.get("total_presupuesto")).doubleValue())
-            );
-
-            presupuestos.add(resumen);
-        }
-
-        return presupuestos;
+        return mapearListaPresupuestos(calculoRepository.listarPresupuestosPorCliente(idCliente));
     }
 
     public List<PresupuestoResumenResponse> listarPresupuestosPorUsuario(Integer idUsuario) {
-        List<Map<String, Object>> filas = calculoRepository.listarPresupuestosPorUsuario(idUsuario);
+        return mapearListaPresupuestos(calculoRepository.listarPresupuestosPorUsuario(idUsuario));
+    }
 
+    // Método auxiliar para evitar código duplicado en las listas
+    private List<PresupuestoResumenResponse> mapearListaPresupuestos(List<Map<String, Object>> filas) {
         List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
-
         for (Map<String, Object> fila : filas) {
             Date fechaSql = (Date) fila.get("fecha_creacion");
-
-            PresupuestoResumenResponse resumen = new PresupuestoResumenResponse(
+            presupuestos.add(new PresupuestoResumenResponse(
                     ((Number) fila.get("id_presupuesto")).intValue(),
                     ((Number) fila.get("id_obra")).intValue(),
                     (String) fila.get("nombre_obra"),
                     (String) fila.get("nombre_tipo_obra"),
                     fechaSql != null ? fechaSql.toLocalDate() : null,
                     redondear(((Number) fila.get("total_presupuesto")).doubleValue())
-            );
-
-            presupuestos.add(resumen);
+            ));
         }
-
         return presupuestos;
     }
 
     private String obtenerTipoObra(Map<String, Object> obraServicio) {
         Object tipo = obraServicio.get("tipo");
-
         if (tipo == null || tipo.toString().trim().isEmpty()) {
             throw new RuntimeException("La obra recibida desde obras-service no tiene tipo.");
         }
-
         return tipo.toString();
     }
 
     @SuppressWarnings("unchecked")
     private Map<String, Double> obtenerMedidasDesdeObraService(Map<String, Object> obraServicio) {
         Object medidasObj = obraServicio.get("medidas");
-
         if (!(medidasObj instanceof Map)) {
             throw new RuntimeException("La obra recibida desde obras-service no tiene medidas válidas.");
         }
@@ -286,10 +242,10 @@ public class CalculoService {
                 medidas.put(entry.getKey().toLowerCase(), convertirADouble(entry.getValue()));
             }
         }
-
         return medidas;
     }
 
+    // --- CORAZÓN MATEMÁTICO REFACTORIZADO ---
     private double calcularCantidad(
             String tipoObra,
             String material,
@@ -300,76 +256,44 @@ public class CalculoService {
             double alto,
             double factor
     ) {
-        /*
-         * Malla ACMA:
-         * Se vende por plancha/unidad.
-         * Para el radier se calcula:
-         * superficie obra / superficie plancha, redondeando hacia arriba.
-         *
-         * Plancha usada como referencia:
-         * 5.0 m x 2.6 m = 13 m²
-         */
-        if (material != null && material.toLowerCase().contains("malla")) {
-            double superficieObra = largo * ancho;
-
-            double largoMalla = 5.0;
-            double anchoMalla = 2.6;
-            double superficieMalla = largoMalla * anchoMalla;
-
-            if (superficieObra <= 0 || superficieMalla <= 0) {
-                return 0;
-            }
-
-            return Math.ceil(superficieObra / superficieMalla);
+        // 1. Calcular la Superficie Base de la obra (m2)
+        double superficie = 0.0;
+        if (tipoObra != null && tipoObra.toLowerCase().contains("tabique")) {
+            superficie = largo * alto; // El tabique es vertical
+        } else {
+            superficie = largo * ancho; // Radier y Techumbre son horizontales
         }
 
-        /*
-         * m3:
-         * Principalmente Radier:
-         * largo x ancho x espesor x factor
-         */
-        if ("m3".equalsIgnoreCase(unidadCalculo)) {
-            return largo * ancho * espesor * factor;
+        if (superficie <= 0) return 0.0;
+
+        String mat = material != null ? material.toLowerCase() : "";
+        String uni = unidadCalculo != null ? unidadCalculo.toLowerCase() : "";
+
+        // 2. Regla especial Malla ACMA (Aprox 13 m2 de cobertura por malla)
+        if (mat.contains("malla")) {
+            return Math.ceil(superficie / 13.0);
         }
 
-        /*
-         * m2:
-         * Radier/Techumbre: largo x ancho x factor
-         * Tabique: largo x alto x factor
-         */
-        if ("m2".equalsIgnoreCase(unidadCalculo)) {
-            if ("Tabique".equalsIgnoreCase(tipoObra)) {
-                return largo * alto * factor;
-            }
-
-            return largo * ancho * factor;
+        // 3. Materiales Volumétricos a granel (m3) - Radier / Hormigón
+        if (uni.equals("m3") || uni.equals("metro cubico")) {
+            double volumen = superficie * (espesor > 0 ? espesor : 1.0);
+            return redondear(volumen * factor); // Permite despachar decimales (Ej: 0.5 m3 de arena)
         }
 
-        /*
-         * ml:
-         * Por ahora se calcula con largo x factor.
-         * Esto aplica, por ejemplo, para costaneras de techumbre.
-         */
-        if ("ml".equalsIgnoreCase(unidadCalculo)) {
-            return largo * factor;
+        // 4. Materiales por peso o fraccionables (kg, litros)
+        if (uni.equals("kg") || uni.equals("kilo") || uni.equals("lt") || uni.equals("litro")) {
+            return redondear(superficie * factor); // Permite vender 2.5 kg de clavos
         }
 
-        /*
-         * unidad:
-         * Se usa el factor como cantidad base.
-         */
-        if ("unidad".equalsIgnoreCase(unidadCalculo) || "un".equalsIgnoreCase(unidadCalculo)) {
-            return factor;
-        }
+        // 5. Unidades Comerciales Indivisibles (Cajas, Planchas, Tiras de Metalcon, Sacos, Unidades)
+        double cantidadCalculada = superficie * factor;
 
-        return 0;
+        // SIEMPRE redondeamos hacia arriba porque no se vende "media plancha" ni "medio montante"
+        return Math.ceil(cantidadCalculada);
     }
 
     private double convertirADouble(Object valor) {
-        if (valor == null) {
-            return 0.0;
-        }
-
+        if (valor == null) return 0.0;
         try {
             return Double.parseDouble(valor.toString());
         } catch (NumberFormatException e) {
