@@ -296,8 +296,9 @@ export default function FormularioProyecto({ user }) {
         usuario_email: user?.email || user?.correo || null,
 
         tipo,
-        tipoObra: tipo,
-        tipo_obra: tipo,
+        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        tipoObra: subtipo ? subtipo : tipo,
+        tipo_obra: subtipo ? subtipo : tipo,
 
         subtipo,
 
