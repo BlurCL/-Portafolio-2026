@@ -1,13 +1,14 @@
 package cl.construfacil.calculo.repository;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.stereotype.Repository;
-
-import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class CalculoRepository {
@@ -70,6 +71,7 @@ public class CalculoRepository {
     }
 
     public List<Map<String, Object>> obtenerReglasPorTipoObra(String tipoObra) {
+        // Blindaje con TRIM e ILIKE para evitar errores por espacios o mayúsculas
         String sql = """
             SELECT
                 t.nombre_tipo_obra,
@@ -81,7 +83,7 @@ public class CalculoRepository {
             FROM tipos_de_obra t
             JOIN reglas_de_calculo rc ON rc.id_tipo_obra = t.id_tipo_obra
             JOIN materiales m ON rc.id_material = m.id_material
-            WHERE LOWER(t.nombre_tipo_obra) = LOWER(?)
+            WHERE TRIM(t.nombre_tipo_obra) ILIKE TRIM(?)
         """;
 
         return jdbcTemplate.queryForList(sql, tipoObra);
@@ -142,58 +144,58 @@ public class CalculoRepository {
     }
 
     public List<Map<String, Object>> listarPresupuestos() {
-    String sql = """
-        SELECT
-            p.id_presupuesto,
-            p.id_obra,
-            o.nombre_obra,
-            t.nombre_tipo_obra,
-            p.fecha_creacion,
-            p.total_presupuesto
-        FROM presupuestos p
-        JOIN obras o ON p.id_obra = o.id_obra
-        JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
-        ORDER BY p.id_presupuesto DESC
-    """;
+        String sql = """
+            SELECT
+                p.id_presupuesto,
+                p.id_obra,
+                o.nombre_obra,
+                t.nombre_tipo_obra,
+                p.fecha_creacion,
+                p.total_presupuesto
+            FROM presupuestos p
+            JOIN obras o ON p.id_obra = o.id_obra
+            JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
+            ORDER BY p.id_presupuesto DESC
+        """;
 
-    return jdbcTemplate.queryForList(sql);
-}
+        return jdbcTemplate.queryForList(sql);
+    }
 
-public List<Map<String, Object>> listarPresupuestosPorCliente(Integer idCliente) {
-    String sql = """
-        SELECT
-            p.id_presupuesto,
-            p.id_obra,
-            o.nombre_obra,
-            t.nombre_tipo_obra,
-            p.fecha_creacion,
-            p.total_presupuesto
-        FROM presupuestos p
-        JOIN obras o ON p.id_obra = o.id_obra
-        JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
-        WHERE o.id_cliente = ?
-        ORDER BY p.id_presupuesto DESC
-    """;
+    public List<Map<String, Object>> listarPresupuestosPorCliente(Integer idCliente) {
+        String sql = """
+            SELECT
+                p.id_presupuesto,
+                p.id_obra,
+                o.nombre_obra,
+                t.nombre_tipo_obra,
+                p.fecha_creacion,
+                p.total_presupuesto
+            FROM presupuestos p
+            JOIN obras o ON p.id_obra = o.id_obra
+            JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
+            WHERE o.id_cliente = ?
+            ORDER BY p.id_presupuesto DESC
+        """;
 
-    return jdbcTemplate.queryForList(sql, idCliente);
-}
+        return jdbcTemplate.queryForList(sql, idCliente);
+    }
 
-public List<Map<String, Object>> listarPresupuestosPorUsuario(Integer idUsuario) {
-    String sql = """
-        SELECT
-            p.id_presupuesto,
-            p.id_obra,
-            o.nombre_obra,
-            t.nombre_tipo_obra,
-            p.fecha_creacion,
-            p.total_presupuesto
-        FROM presupuestos p
-        JOIN obras o ON p.id_obra = o.id_obra
-        JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
-        WHERE o.id_usuario = ?
-        ORDER BY p.id_presupuesto DESC
-    """;
+    public List<Map<String, Object>> listarPresupuestosPorUsuario(Integer idUsuario) {
+        String sql = """
+            SELECT
+                p.id_presupuesto,
+                p.id_obra,
+                o.nombre_obra,
+                t.nombre_tipo_obra,
+                p.fecha_creacion,
+                p.total_presupuesto
+            FROM presupuestos p
+            JOIN obras o ON p.id_obra = o.id_obra
+            JOIN tipos_de_obra t ON o.id_tipo_obra = t.id_tipo_obra
+            WHERE o.id_usuario = ?
+            ORDER BY p.id_presupuesto DESC
+        """;
 
-    return jdbcTemplate.queryForList(sql, idUsuario);
-}
+        return jdbcTemplate.queryForList(sql, idUsuario);
+    }
 }
