@@ -43,6 +43,7 @@ public class CalculoService {
     public CalculoObraResponse calcularObra(Integer idObra) {
         Map<String, Object> obraServicio = obtenerObraDesdeServicio(idObra);
 
+        // AQUI ESTA LA MAGIA DEL SUBTIPO
         String tipoObra = obtenerTipoObra(obraServicio);
         Map<String, Double> medidas = obtenerMedidasDesdeObraService(obraServicio);
 
@@ -78,7 +79,7 @@ public class CalculoService {
 
             detalle.add(new DetalleCalculoResponse(
                     material,
-                    cantidad, // La cantidad ya viene redondeada por la logica de negocio
+                    cantidad, 
                     redondear(precio),
                     redondear(subtotal)
             ));
@@ -90,6 +91,7 @@ public class CalculoService {
     public PresupuestoGuardadoResponse guardarPresupuesto(Integer idObra) {
         Map<String, Object> obraServicio = obtenerObraDesdeServicio(idObra);
 
+        // AQUI ESTA LA MAGIA DEL SUBTIPO
         String tipoObra = obtenerTipoObra(obraServicio);
         Map<String, Double> medidas = obtenerMedidasDesdeObraService(obraServicio);
 
@@ -128,7 +130,7 @@ public class CalculoService {
 
             filasParaGuardar.add(Map.of(
                     "idMaterial", idMaterial,
-                    "cantidad", cantidad, // Redondeado constructivamente
+                    "cantidad", cantidad, 
                     "subtotal", redondear(subtotal)
             ));
 
@@ -202,7 +204,6 @@ public class CalculoService {
         return mapearListaPresupuestos(calculoRepository.listarPresupuestosPorUsuario(idUsuario));
     }
 
-    // Método auxiliar para evitar código duplicado en las listas
     private List<PresupuestoResumenResponse> mapearListaPresupuestos(List<Map<String, Object>> filas) {
         List<PresupuestoResumenResponse> presupuestos = new ArrayList<>();
         for (Map<String, Object> fila : filas) {
@@ -219,11 +220,21 @@ public class CalculoService {
         return presupuestos;
     }
 
+    // --- LECTOR DE SUBTIPOS CORREGIDO ---
     private String obtenerTipoObra(Map<String, Object> obraServicio) {
+        // 1. Prioridad Máxima: Buscar el Subtipo exacto para obtener la receta específica
+        Object subtipo = obraServicio.get("subtipo"); 
+        
+        if (subtipo != null && !subtipo.toString().trim().isEmpty()) {
+            return subtipo.toString(); 
+        }
+        
+        // 2. Respaldo: Si el frontend no envía subtipo, usamos el tipo genérico
         Object tipo = obraServicio.get("tipo");
         if (tipo == null || tipo.toString().trim().isEmpty()) {
-            throw new RuntimeException("La obra recibida desde obras-service no tiene tipo.");
+            throw new RuntimeException("Error Crítico: La obra recibida no tiene Tipo ni Subtipo.");
         }
+
         return tipo.toString();
     }
 
