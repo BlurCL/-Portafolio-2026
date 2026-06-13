@@ -1,6 +1,11 @@
 import React from "react";
 
 export default function AdminFerreterias({ user }) {
+  const [ferreterias, setFerreterias] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [guardandoId, setGuardandoId] = useState(null);
+  const [error, setError] = useState("");
+
   const esAdmin = String(user?.rol || "").toUpperCase() === "ADMIN";
 
   if (!esAdmin) {
@@ -22,3 +27,4 @@ export default function AdminFerreterias({ user }) {
     </section>
   );
 }
+
