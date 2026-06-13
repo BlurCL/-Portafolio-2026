@@ -42,6 +42,25 @@ public class FerreteriaService {
     }
 
     @Transactional(readOnly = true)
+    public List<FerreteriaResponse> listarFerreteriasAdmin() {
+        return ferreteriaRepository.findAllByOrderByIdFerreteriaAsc()
+                .stream()
+                .map(this::mapearFerreteria)
+                .toList();
+    }
+
+    @Transactional
+    public FerreteriaResponse cambiarEstadoFerreteria(Integer idFerreteria, Boolean activa) {
+        Ferreteria ferreteria = ferreteriaRepository.findById(idFerreteria)
+                .orElseThrow(() -> new RuntimeException("Ferretería no encontrada con ID: " + idFerreteria));
+
+        ferreteria.setActiva(Boolean.TRUE.equals(activa));
+        Ferreteria actualizada = ferreteriaRepository.save(ferreteria);
+
+        return mapearFerreteria(actualizada);
+    }
+
+    @Transactional(readOnly = true)
     public List<ProductoFerreteriaResponse> listarMateriales() {
         return productoFerreteriaRepository.findByActivoTrueOrderByIdProductoAsc()
                 .stream()

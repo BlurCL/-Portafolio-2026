@@ -2,8 +2,9 @@ import React from "react";
 import { useAuth } from "./hooks/useAuth";
 import MainLayout from "./layouts/mainLayouts";
 import FormularioProyecto from "./components/FormularioProyecto";
-import Login from "./views/Login"; // <-- ¡Aquí ya apunta a la carpeta correcta!
-import Register from "./views/Register"; // <-- ¡Aquí también!
+import AdminFerreterias from "./components/AdminFerreterias";
+import Login from "./views/Login";
+import Register from "./views/Register";
 
 export default function App() {
   const { user, authView, setAuthView, handleLogin, handleLogout } = useAuth();
@@ -14,6 +15,7 @@ export default function App() {
         <div className="auth-card">
           <h1 className="auth-title">ConstruFácil</h1>
           <p className="auth-subtitle">Gestión de proyectos de construcción</p>
+
           <button className="auth-button" onClick={() => setAuthView("login")}>
             Iniciar Sesión / Registrarse
           </button>
@@ -23,16 +25,32 @@ export default function App() {
   }
 
   if (!user && authView === "login") {
-    return <Login onLogin={handleLogin} onSwitchToRegister={() => setAuthView("register")} />;
+    return (
+      <Login
+        onLogin={handleLogin}
+        onSwitchToRegister={() => setAuthView("register")}
+      />
+    );
   }
 
   if (!user && authView === "register") {
-    return <Register onRegister={handleLogin} onSwitchToLogin={() => setAuthView("login")} />;
+    return (
+      <Register
+        onRegister={handleLogin}
+        onSwitchToLogin={() => setAuthView("login")}
+      />
+    );
   }
+
+  const esAdmin = String(user?.rol || "").toUpperCase() === "ADMIN";
 
   return (
     <MainLayout user={user} onLogout={handleLogout}>
-      <FormularioProyecto user={user} />
+      {esAdmin ? (
+        <AdminFerreterias user={user} />
+      ) : (
+        <FormularioProyecto user={user} />
+      )}
     </MainLayout>
   );
 }
