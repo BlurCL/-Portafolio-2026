@@ -1,17 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { tiposObra, opcionesPorTipo } from "../data/opciones";
 import ComparadorCotizaciones from "./ComparadorCotizaciones";
-
-const CALCULO_API_URL = "http://localhost:8081/api";
-const OBRAS_API_URL = "http://localhost:8082/api";
+import { proyectoService } from "../services/proyectoService";
+import { formatCLP, formatFecha } from "../utils/formatters";
 
 export default function FormularioProyecto({ user }) {
-  const [nombreObra, setNombreObra] = useState("");
-  const [tipo, setTipo] = useState("");
-  const [subtipo, setSubtipo] = useState("");
-  const [largo, setLargo] = useState("");
-  const [ancho, setAncho] = useState("");
-  const [alto, setAlto] = useState("");
+  const [obraData, setObraData] = useState({
+    nombreObra: "",
+    tipo: "",
+    subtipo: "",
+    largo: "",
+    ancho: "",
+    alto: "",
+  });
 
   const [resultado, setResultado] = useState(null);
   const [historial, setHistorial] = useState([]);
@@ -25,97 +26,104 @@ export default function FormularioProyecto({ user }) {
   const [error, setError] = useState("");
 
   const userKey = user?.email || "invitado";
+  const { nombreObra, tipo, subtipo, largo, ancho, alto } = obraData;
 
-  useEffect(() => {
-    cargarBorradoresGuardados();
-  }, [userKey]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
 
-  useEffect(() => {
-    setSubtipo("");
+    setObraData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
     setResultado(null);
     setError("");
-
-    if (tipo === "Radier") {
-      setAlto("0.1");
-    } else if (tipo === "Tabique") {
-      setAlto("2.4");
-    } else {
-      setAlto("");
-    }
-  }, [tipo]);
-
-  const opciones = useMemo(() => {
-    return opcionesPorTipo[tipo] || [];
-  }, [tipo]);
-
-  const superficie = useMemo(() => {
-    const valorLargo = Number(largo);
-    const valorAncho = Number(ancho);
-    const valorAlto = Number(alto);
-
-    if (!valorLargo || valorLargo <= 0) {
-      return 0;
-    }
-
-    if (tipo === "Tabique") {
-      if (!valorAlto || valorAlto <= 0) {
-        return 0;
-      }
-
-      return valorLargo * valorAlto;
-    }
-
-    if (!valorAncho || valorAncho <= 0) {
-      return 0;
-    }
-
-    return valorLargo * valorAncho;
-  }, [tipo, largo, ancho, alto]);
-
-  const requiereAlto = tipo === "Radier" || tipo === "Tabique";
-
-  const etiquetaAlto = useMemo(() => {
-    if (tipo === "Radier") return "Espesor en metros";
-    if (tipo === "Tabique") return "Alto en metros";
-    return "";
-  }, [tipo]);
-
-  const placeholderAlto = useMemo(() => {
-    if (tipo === "Radier") return "Ej: 0.1";
-    if (tipo === "Tabique") return "Ej: 2.4";
-    return "";
-  }, [tipo]);
-
-  const obtenerIdCliente = () => {
-    const idCliente =
-      localStorage.getItem("idCliente") ||
-      localStorage.getItem("id_cliente") ||
-      user?.idCliente ||
-      user?.id_cliente;
-
-    return idCliente ? Number(idCliente) : null;
-  };
-
-  const obtenerIdUsuario = () => {
-    const idUsuario =
-      localStorage.getItem("idUsuario") ||
-      localStorage.getItem("id_usuario") ||
-      user?.idUsuario ||
-      user?.id_usuario;
-
-    console.log("ID USUARIO USADO EN FORMULARIO:", idUsuario);
-
-    return idUsuario ? Number(idUsuario) : null;
   };
 
   const cargarBorradoresGuardados = () => {
     try {
       const savedBorradores = localStorage.getItem(`borradores_${userKey}`);
       setBorradores(savedBorradores ? JSON.parse(savedBorradores) : []);
-    } catch (error) {
-      console.error("Error leyendo borradores desde localStorage:", error);
+    } catch (err) {
+      console.error("Error leyendo borradores desde localStorage:", err);
       setBorradores([]);
     }
+  };
+
+  useEffect(() => {
+    cargarBorradoresGuardados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userKey]);
+
+  useEffect(() => {
+    let altoDefecto = "";
+
+    if (tipo === "Radier") altoDefecto = "0.1";
+    if (tipo === "Tabique") altoDefecto = "2.4";
+
+    setObraData((prev) => ({
+      ...prev,
+      subtipo: "",
+      alto: altoDefecto,
+    }));
+
+    setResultado(null);
+    setError("");
+  }, [tipo]);
+
+  const opciones = useMemo(() => opcionesPorTipo[tipo] || [], [tipo]);
+
+  const superficie = useMemo(() => {
+    const valorLargo = Number(largo);
+    const valorAncho = Number(ancho);
+    const valorAlto = Number(alto);
+
+    if (!valorLargo || valorLargo <= 0) return 0;
+
+    if (tipo === "Tabique") {
+      if (!valorAlto || valorAlto <= 0) return 0;
+      return valorLargo * valorAlto;
+    }
+
+    if (!valorAncho || valorAncho <= 0) return 0;
+
+    return valorLargo * valorAncho;
+  }, [tipo, largo, ancho, alto]);
+
+  const requiereAlto = tipo === "Radier" || tipo === "Tabique";
+
+  const etiquetaAlto =
+    tipo === "Radier"
+      ? "Espesor en metros"
+      : tipo === "Tabique"
+      ? "Alto en metros"
+      : "";
+
+  const placeholderAlto =
+    tipo === "Radier"
+      ? "Ej: 0.1"
+      : tipo === "Tabique"
+      ? "Ej: 2.4"
+      : "";
+
+  const obtenerIdCliente = () => {
+    const id =
+      localStorage.getItem("idCliente") ||
+      localStorage.getItem("id_cliente") ||
+      user?.idCliente ||
+      user?.id_cliente;
+
+    return id ? Number(id) : null;
+  };
+
+  const obtenerIdUsuario = () => {
+    const id =
+      localStorage.getItem("idUsuario") ||
+      localStorage.getItem("id_usuario") ||
+      user?.idUsuario ||
+      user?.id_usuario;
+
+    return id ? Number(id) : null;
   };
 
   const cargarHistorialBD = async () => {
@@ -132,22 +140,11 @@ export default function FormularioProyecto({ user }) {
         );
       }
 
-      const response = await fetch(
-        `${CALCULO_API_URL}/calculos/presupuestos/usuario/${idUsuario}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      const data = await proyectoService.obtenerHistorial(idUsuario);
       setHistorial(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error cargando historial desde BD:", error);
-      setError(
-        "No se pudo cargar el historial del usuario conectado. Revisa que el login guarde idUsuario y que calculo-service esté funcionando en el puerto 8081."
-      );
+      setError("No se pudo cargar el historial del usuario conectado.");
     } finally {
       setLoadingHistorial(false);
     }
@@ -167,17 +164,11 @@ export default function FormularioProyecto({ user }) {
     setError("");
 
     try {
-      const response = await fetch(
-        `${CALCULO_API_URL}/calculos/presupuesto/${itemHistorial.idPresupuesto}`
+      const data = await proyectoService.obtenerDetallePresupuesto(
+        itemHistorial.idPresupuesto
       );
 
-      if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const resultadoDetalle = {
+      setResultado({
         origen: "backend",
         idPresupuesto: data.idPresupuesto || itemHistorial.idPresupuesto,
         obraId: data.obraId || itemHistorial.idObra,
@@ -190,10 +181,12 @@ export default function FormularioProyecto({ user }) {
         superficie: null,
         detalle: Array.isArray(data.detalle) ? data.detalle : [],
         total: data.total || itemHistorial.totalPresupuesto || 0,
-      };
+      });
 
-      setResultado(resultadoDetalle);
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth",
+      });
     } catch (error) {
       console.error("Error cargando detalle del presupuesto:", error);
       setError("No se pudo cargar el detalle del presupuesto seleccionado.");
@@ -209,12 +202,7 @@ export default function FormularioProyecto({ user }) {
     }
 
     const borrador = {
-      nombreObra,
-      tipo,
-      subtipo,
-      largo,
-      ancho,
-      alto,
+      ...obraData,
       fecha: new Date().toISOString(),
     };
 
@@ -231,12 +219,15 @@ export default function FormularioProyecto({ user }) {
   };
 
   const cargarBorrador = (borrador) => {
-    setNombreObra(borrador.nombreObra || "");
-    setTipo(borrador.tipo || "");
-    setSubtipo(borrador.subtipo || "");
-    setLargo(borrador.largo || "");
-    setAncho(borrador.ancho || "");
-    setAlto(borrador.alto || "");
+    setObraData({
+      nombreObra: borrador.nombreObra || "",
+      tipo: borrador.tipo || "",
+      subtipo: borrador.subtipo || "",
+      largo: borrador.largo || "",
+      ancho: borrador.ancho || "",
+      alto: borrador.alto || "",
+    });
+
     setResultado(null);
     setError("");
   };
@@ -256,10 +247,7 @@ export default function FormularioProyecto({ user }) {
     if (!tipo) return "Debes seleccionar un tipo de obra.";
     if (!subtipo) return "Debes seleccionar un subtipo.";
     if (!largo || Number(largo) <= 0) return "Debes ingresar un largo válido.";
-
-    if (!ancho || Number(ancho) <= 0) {
-      return "Debes ingresar un ancho válido.";
-    }
+    if (!ancho || Number(ancho) <= 0) return "Debes ingresar un ancho válido.";
 
     if (tipo === "Radier" && (!alto || Number(alto) <= 0)) {
       return "Debes ingresar un espesor válido para el radier.";
@@ -272,132 +260,6 @@ export default function FormularioProyecto({ user }) {
     if (superficie <= 0) return "La superficie debe ser mayor a cero.";
 
     return "";
-  };
-
-  const obtenerMensajeBackend = async (response) => {
-    try {
-      const texto = await response.text();
-      return texto || "Sin detalle del backend.";
-    } catch {
-      return "No se pudo leer el detalle del error.";
-    }
-  };
-
-  const obtenerAltoParaBackend = () => {
-    if (tipo === "Radier") return Number(alto || 0.1);
-    if (tipo === "Tabique") return Number(alto || 2.4);
-    return 0;
-  };
-
-  const crearObra = async () => {
-    const idCliente = obtenerIdCliente();
-    const idUsuario = obtenerIdUsuario();
-
-    const payloadObra = {
-      nombre: nombreObra.trim(),
-      nombreObra: nombreObra.trim(),
-      nombre_obra: nombreObra.trim(),
-
-      idCliente,
-      id_cliente: idCliente,
-
-      idUsuario,
-      id_usuario: idUsuario,
-
-      usuarioEmail: user?.email || user?.correo || null,
-      usuario_email: user?.email || user?.correo || null,
-
-      tipo,
-      tipoObra: tipo,
-      tipo_obra: tipo,
-
-      subtipo,
-
-      largo: Number(largo),
-      ancho: Number(ancho),
-      alto: obtenerAltoParaBackend(),
-      superficie,
-
-      medidas: {
-        largo: Number(largo),
-        ancho: Number(ancho),
-        alto: obtenerAltoParaBackend(),
-      },
-    };
-
-    const response = await fetch(`${OBRAS_API_URL}/obras`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payloadObra),
-    });
-
-    if (!response.ok) {
-      const detalle = await obtenerMensajeBackend(response);
-      console.error("Error creando obra:", detalle);
-
-      throw new Error(
-        `No se pudo crear la obra. Código HTTP: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    console.log("Obra creada desde obras-service:", data);
-
-    const obraId = data.id || data.obraId || data.obra_id || data.idObra || data.id_obra;
-
-    if (!obraId) {
-      console.error("Respuesta sin ID desde obras-service:", data);
-      throw new Error("El backend creó la obra, pero no devolvió el ID.");
-    }
-
-    return {
-      obraId,
-      obra: data,
-    };
-  };
-
-  const calcularPresupuesto = async (obraId) => {
-    const response = await fetch(
-      `${CALCULO_API_URL}/calculos/obra/${obraId}/guardar`,
-      {
-        method: "POST",
-      }
-    );
-
-    if (!response.ok) {
-      const detalle = await obtenerMensajeBackend(response);
-      console.error("Error calculando presupuesto:", detalle);
-
-      throw new Error(
-        `No se pudo calcular el presupuesto. Código HTTP: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    console.log("Presupuesto calculado desde calculo-service:", data);
-
-    return data;
-  };
-
-  const normalizarResultadoBackend = (data, obraId) => {
-    return {
-      origen: "backend",
-      idPresupuesto: data.idPresupuesto || data.id_presupuesto || null,
-      obraId,
-      nombreObra: nombreObra.trim(),
-      tipoObra: data.tipoObra || data.tipo_obra || tipo,
-      subtipo: data.subtipo || subtipo,
-      largo: data.largo || Number(largo),
-      ancho: data.ancho || Number(ancho),
-      alto: data.alto || obtenerAltoParaBackend(),
-      superficie,
-      detalle: Array.isArray(data.detalle) ? data.detalle : [],
-      total: data.total || 0,
-    };
   };
 
   const handleSubmit = async (e) => {
@@ -415,57 +277,166 @@ export default function FormularioProyecto({ user }) {
     setResultado(null);
 
     try {
-      const { obraId } = await crearObra();
+      const idCliente = obtenerIdCliente();
+      const idUsuario = obtenerIdUsuario();
+      const altoMapeado = requiereAlto ? Number(alto) : 0;
 
-      const dataPresupuesto = await calcularPresupuesto(obraId);
+      const payloadObra = {
+        nombre: nombreObra.trim(),
+        nombreObra: nombreObra.trim(),
+        nombre_obra: nombreObra.trim(),
 
-      const resultadoFinal = normalizarResultadoBackend(
-        dataPresupuesto,
-        obraId
-      );
+        idCliente,
+        id_cliente: idCliente,
 
-      setResultado(resultadoFinal);
+        idUsuario,
+        id_usuario: idUsuario,
+
+        usuarioEmail: user?.email || user?.correo || null,
+        usuario_email: user?.email || user?.correo || null,
+
+        tipo,
+        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        tipoObra: subtipo ? subtipo : tipo,
+        tipo_obra: subtipo ? subtipo : tipo,
+
+        subtipo,
+
+        largo: Number(largo),
+        ancho: Number(ancho),
+        alto: altoMapeado,
+        superficie,
+
+        medidas: {
+          largo: Number(largo),
+          ancho: Number(ancho),
+          alto: altoMapeado,
+        },
+      };
+
+      const dataObra = await proyectoService.crearObra(payloadObra);
+
+      const obraId =
+        dataObra.id ||
+        dataObra.obraId ||
+        dataObra.obra_id ||
+        dataObra.idObra ||
+        dataObra.id_obra;
+
+      if (!obraId) {
+        throw new Error("El backend creó la obra, pero no devolvió el ID.");
+      }
+
+      const dataPresupuesto = await proyectoService.calcularPresupuesto(obraId);
+
+      setResultado({
+        origen: "backend",
+        idPresupuesto:
+          dataPresupuesto.idPresupuesto ||
+          dataPresupuesto.id_presupuesto ||
+          null,
+        obraId,
+        nombreObra: nombreObra.trim(),
+        tipoObra: dataPresupuesto.tipoObra || dataPresupuesto.tipo_obra || tipo,
+        subtipo: dataPresupuesto.subtipo || subtipo,
+        largo: dataPresupuesto.largo || Number(largo),
+        ancho: dataPresupuesto.ancho || Number(ancho),
+        alto: dataPresupuesto.alto || altoMapeado,
+        superficie,
+        detalle: Array.isArray(dataPresupuesto.detalle)
+          ? dataPresupuesto.detalle
+          : [],
+        total: dataPresupuesto.total || 0,
+      });
 
       if (showHistorial) {
         await cargarHistorialBD();
       }
     } catch (error) {
       console.error("Error generando presupuesto:", error);
-
       setError(
-        "No se pudo generar el presupuesto. Revisa que obras-service esté en el puerto 8082, calculo-service en el puerto 8081 y que exista el endpoint POST /api/obras."
+        "No se pudo generar el presupuesto. Revisa la conectividad de los microservicios."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTipoChange = (e) => {
-    setTipo(e.target.value);
-  };
-
   const limpiarFormulario = () => {
-    setNombreObra("");
-    setTipo("");
-    setSubtipo("");
-    setLargo("");
-    setAncho("");
-    setAlto("");
+    setObraData({
+      nombreObra: "",
+      tipo: "",
+      subtipo: "",
+      largo: "",
+      ancho: "",
+      alto: "",
+    });
+
     setResultado(null);
     setError("");
   };
 
-  const formatCLP = (valor) => {
-    return Number(valor || 0).toLocaleString("es-CL", {
-      style: "currency",
-      currency: "CLP",
-    });
+  const obtenerNombreMaterial = (material) => {
+    return (
+      material.material ||
+      material.nombre ||
+      material.nombreMaterial ||
+      material.nombre_material ||
+      "Material sin nombre"
+    );
   };
 
-  const formatFecha = (fecha) => {
-    if (!fecha) return "";
-    return new Date(fecha).toLocaleString("es-CL");
+  const obtenerUnidadComercial = (nombre = "") => {
+    const texto = nombre.toLowerCase();
+
+    if (texto.includes("cemento")) return "sacos";
+    if (texto.includes("arena")) return "m³";
+    if (texto.includes("grava")) return "m³";
+    if (texto.includes("malla")) return "unidades";
+    if (texto.includes("tornillo")) return "unidades";
+    if (texto.includes("zinc")) return "planchas";
+    if (texto.includes("costanera")) return "unidades";
+    if (texto.includes("perfil")) return "unidades";
+    if (texto.includes("yeso")) return "planchas";
+
+    return "unidades";
   };
+
+  const obtenerCantidadCompra = (cantidad) => {
+    const numero = Number(cantidad || 0);
+
+    if (numero <= 0) return 0;
+
+    return Math.ceil(numero);
+  };
+
+  const calcularSubtotalCompra = (material) => {
+    const cantidadCompra = obtenerCantidadCompra(material.cantidad);
+    const precioUnitario = Number(material.precioUnitario || 0);
+
+    return cantidadCompra * precioUnitario;
+  };
+
+  const calcularTotalCompra = (detalle = []) => {
+    return detalle.reduce((total, material) => {
+      return total + calcularSubtotalCompra(material);
+    }, 0);
+  };
+
+  const mostrarSubtipo = (subtipoResultado) => {
+    if (!subtipoResultado) return false;
+    if (subtipoResultado === "Presupuesto guardado") return false;
+
+    return true;
+  };
+
+  const tieneSuperficieValida = (valorSuperficie) => {
+    return valorSuperficie !== null && Number(valorSuperficie) > 0;
+  };
+
+  const detalleResultado = Array.isArray(resultado?.detalle)
+    ? resultado.detalle
+    : [];
 
   return (
     <section className="card">
@@ -483,19 +454,16 @@ export default function FormularioProyecto({ user }) {
           Nombre de la obra
           <input
             type="text"
+            name="nombreObra"
             value={nombreObra}
-            onChange={(e) => {
-              setNombreObra(e.target.value);
-              setResultado(null);
-              setError("");
-            }}
+            onChange={handleInputChange}
             placeholder="Ej: Radier patio"
           />
         </label>
 
         <label>
           Tipo de obra
-          <select value={tipo} onChange={handleTipoChange}>
+          <select name="tipo" value={tipo} onChange={handleInputChange}>
             <option value="">Seleccione</option>
 
             {tiposObra.map((item) => (
@@ -509,12 +477,9 @@ export default function FormularioProyecto({ user }) {
         <label>
           Subtipo
           <select
+            name="subtipo"
             value={subtipo}
-            onChange={(e) => {
-              setSubtipo(e.target.value);
-              setResultado(null);
-              setError("");
-            }}
+            onChange={handleInputChange}
             disabled={!tipo}
           >
             <option value="">Seleccione</option>
@@ -531,14 +496,11 @@ export default function FormularioProyecto({ user }) {
           Largo en metros
           <input
             type="number"
+            name="largo"
             min="0"
             step="0.01"
             value={largo}
-            onChange={(e) => {
-              setLargo(e.target.value);
-              setResultado(null);
-              setError("");
-            }}
+            onChange={handleInputChange}
             placeholder="Ej: 5"
           />
         </label>
@@ -547,14 +509,11 @@ export default function FormularioProyecto({ user }) {
           Ancho en metros
           <input
             type="number"
+            name="ancho"
             min="0"
             step="0.01"
             value={ancho}
-            onChange={(e) => {
-              setAncho(e.target.value);
-              setResultado(null);
-              setError("");
-            }}
+            onChange={handleInputChange}
             placeholder="Ej: 3"
           />
         </label>
@@ -564,14 +523,11 @@ export default function FormularioProyecto({ user }) {
             {etiquetaAlto}
             <input
               type="number"
+              name="alto"
               min="0"
               step={tipo === "Radier" ? "0.01" : "0.1"}
               value={alto}
-              onChange={(e) => {
-                setAlto(e.target.value);
-                setResultado(null);
-                setError("");
-              }}
+              onChange={handleInputChange}
               placeholder={placeholderAlto}
             />
           </label>
@@ -593,9 +549,11 @@ export default function FormularioProyecto({ user }) {
             {loading ? "Generando presupuesto..." : "Calcular presupuesto"}
           </button>
 
-          <button type="button" onClick={guardarBorrador}>
-            Guardar borrador
-          </button>
+          {resultado && (
+            <button type="button" onClick={guardarBorrador}>
+              Guardar borrador
+            </button>
+          )}
 
           <button type="button" onClick={limpiarFormulario}>
             Limpiar
@@ -639,7 +597,10 @@ export default function FormularioProyecto({ user }) {
           {showHistorial ? "Ocultar historial" : "Ver historial"}
         </button>
 
-        <button type="button" onClick={() => setShowBorradores(!showBorradores)}>
+        <button
+          type="button"
+          onClick={() => setShowBorradores(!showBorradores)}
+        >
           {showBorradores ? "Ocultar borradores" : "Ver borradores"}
         </button>
       </div>
@@ -657,14 +618,14 @@ export default function FormularioProyecto({ user }) {
               {historial.map((item) => (
                 <li key={item.idPresupuesto}>
                   <strong>{item.nombreObra || "Obra sin nombre"}</strong>
-
                   <span> | ID: {item.idPresupuesto}</span>
-
                   <span> | Tipo: {item.tipoObra || "Sin tipo"}</span>
-
                   <span> | Total: {formatCLP(item.totalPresupuesto)}</span>
-
-                  <span> | Fecha: {formatFecha(item.fechaCreacion)}</span>
+                  <span>
+                    {" "}
+                    | Fecha:{" "}
+                    {formatFecha(item.fechaCreacion || item.fechaCreation)}
+                  </span>
 
                   <div className="button-row small">
                     <button
@@ -693,13 +654,11 @@ export default function FormularioProyecto({ user }) {
               {borradores.map((borrador, index) => (
                 <li key={`${borrador.fecha}_${index}`}>
                   <strong>{borrador.nombreObra || "Obra sin nombre"}</strong>
-
                   <span>
                     {" "}
                     | {borrador.tipo || "Sin tipo"} -{" "}
                     {borrador.subtipo || "Sin subtipo"}
                   </span>
-
                   <span>
                     {" "}
                     | Medidas: {borrador.largo || "--"} x{" "}
@@ -717,11 +676,17 @@ export default function FormularioProyecto({ user }) {
                   <span> | Fecha: {formatFecha(borrador.fecha)}</span>
 
                   <div className="button-row small">
-                    <button type="button" onClick={() => cargarBorrador(borrador)}>
+                    <button
+                      type="button"
+                      onClick={() => cargarBorrador(borrador)}
+                    >
                       Cargar
                     </button>
 
-                    <button type="button" onClick={() => eliminarBorrador(index)}>
+                    <button
+                      type="button"
+                      onClick={() => eliminarBorrador(index)}
+                    >
                       Eliminar
                     </button>
                   </div>
@@ -736,12 +701,6 @@ export default function FormularioProyecto({ user }) {
         <div className="result-box">
           <h3>Presupuesto generado</h3>
 
-          {resultado.idPresupuesto && (
-            <p>
-              <strong>ID presupuesto:</strong> {resultado.idPresupuesto}
-            </p>
-          )}
-
           <p>
             <strong>Obra:</strong> {resultado.nombreObra}
           </p>
@@ -750,24 +709,26 @@ export default function FormularioProyecto({ user }) {
             <strong>Tipo de obra:</strong> {resultado.tipoObra}
           </p>
 
-          <p>
-            <strong>Subtipo:</strong> {resultado.subtipo}
-          </p>
+          {mostrarSubtipo(resultado.subtipo) && (
+            <p>
+              <strong>Subtipo:</strong> {resultado.subtipo}
+            </p>
+          )}
 
-          <p>
-            <strong>Superficie:</strong>{" "}
-            {resultado.superficie
-              ? `${Number(resultado.superficie).toFixed(2)} m²`
-              : "--"}
-          </p>
+          {tieneSuperficieValida(resultado.superficie) && (
+            <p>
+              <strong>Superficie:</strong>{" "}
+              {Number(resultado.superficie).toFixed(2)} m²
+            </p>
+          )}
 
-          {resultado.tipoObra === "Radier" && resultado.alto > 0 && (
+          {resultado.tipoObra === "Radier" && Number(resultado.alto) > 0 && (
             <p>
               <strong>Espesor:</strong> {resultado.alto} m
             </p>
           )}
 
-          {resultado.tipoObra === "Tabique" && resultado.alto > 0 && (
+          {resultado.tipoObra === "Tabique" && Number(resultado.alto) > 0 && (
             <p>
               <strong>Alto:</strong> {resultado.alto} m
             </p>
@@ -776,32 +737,112 @@ export default function FormularioProyecto({ user }) {
           <div className="materiales-section">
             <h3>Materiales necesarios</h3>
 
-            {resultado.detalle.length === 0 ? (
+            {detalleResultado.length === 0 ? (
               <p>No hay materiales disponibles para mostrar.</p>
             ) : (
-              <ul>
-                {resultado.detalle.map((material, index) => (
-                  <li key={`${material.material}_${index}`}>
-                    <strong>{material.material}</strong> - Cantidad:{" "}
-                    {material.cantidad} - Precio unitario:{" "}
-                    {formatCLP(material.precioUnitario)} - Subtotal:{" "}
-                    {formatCLP(material.subtotal)}
-                  </li>
-                ))}
-              </ul>
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: "12px",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Material
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Cantidad para compra
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Precio unitario
+                      </th>
+                      <th style={{ textAlign: "left", padding: "10px" }}>
+                        Subtotal
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {detalleResultado.map((material, index) => {
+                      const nombreMaterial = obtenerNombreMaterial(material);
+                      const unidad = obtenerUnidadComercial(nombreMaterial);
+                      const cantidadCompra = obtenerCantidadCompra(
+                        material.cantidad
+                      );
+
+                      return (
+                        <tr key={`${nombreMaterial}_${index}`}>
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            <strong>{nombreMaterial}</strong>
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {cantidadCompra} {unidad}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {formatCLP(material.precioUnitario)}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: "10px",
+                              borderTop: "1px solid #cbd5e1",
+                            }}
+                          >
+                            {formatCLP(calcularSubtotalCompra(material))}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <p
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Las cantidades se redondean hacia arriba porque los materiales
+                  se compran en unidades comerciales completas.
+                </p>
+              </div>
             )}
 
             <p className="costo-total">
-              <strong>Total estimado: {formatCLP(resultado.total)}</strong>
+              <strong>
+                Total estimado de compra:{" "}
+                {formatCLP(calcularTotalCompra(detalleResultado))}
+              </strong>
             </p>
 
-            {resultado.detalle.length > 0 && (
+            {detalleResultado.length > 0 && (
               <ComparadorCotizaciones
-                materiales={resultado.detalle.map((item) => ({
-                  nombre: item.material,
-                  cantidad: item.cantidad,
+                materiales={detalleResultado.map((item) => ({
+                  nombre: obtenerNombreMaterial(item),
+                  cantidad: obtenerCantidadCompra(item.cantidad),
                   precioUnitario: item.precioUnitario,
-                  subtotal: item.subtotal,
+                  subtotal: calcularSubtotalCompra(item),
                 }))}
               />
             )}

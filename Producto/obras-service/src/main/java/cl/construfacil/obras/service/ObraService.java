@@ -1,11 +1,12 @@
 package cl.construfacil.obras.service;
 
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import cl.construfacil.obras.dto.CrearObraRequest;
 import cl.construfacil.obras.dto.ObraResponse;
 import cl.construfacil.obras.repository.ObraRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class ObraService {
@@ -19,7 +20,15 @@ public class ObraService {
     public ObraResponse crearObra(CrearObraRequest request) {
         validarObra(request);
 
-        Integer idTipoObra = obraRepository.obtenerIdTipoObra(request.getTipo());
+        // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+        // Definimos qué texto vamos a buscar en la base de datos
+        String tipoParaBuscar = (request.getSubtipo() != null && !request.getSubtipo().trim().isEmpty()) 
+                                ? request.getSubtipo() 
+                                : request.getTipo();
+
+        // Ahora buscará el subtipo exacto si existe, o el tipo genérico como respaldo
+        Integer idTipoObra = obraRepository.obtenerIdTipoObra(tipoParaBuscar);
+        // -------------------------------
 
         Integer idObra = obraRepository.insertarObra(request, idTipoObra);
 
