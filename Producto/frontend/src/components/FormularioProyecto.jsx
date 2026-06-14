@@ -4,7 +4,10 @@ import ComparadorCotizaciones from "./ComparadorCotizaciones";
 import { proyectoService } from "../services/proyectoService";
 import { formatCLP, formatFecha } from "../utils/formatters";
 
-export default function FormularioProyecto({ user }) {
+export default function FormularioProyecto({
+  user,
+  vistaActiva,
+}) {
   const [obraData, setObraData] = useState({
     nombreObra: "",
     tipo: "",
@@ -16,10 +19,7 @@ export default function FormularioProyecto({ user }) {
 
   const [resultado, setResultado] = useState(null);
   const [historial, setHistorial] = useState([]);
-  const [borradores, setBorradores] = useState([]);
-
-  const [showHistorial, setShowHistorial] = useState(false);
-  const [showBorradores, setShowBorradores] = useState(false);
+  const [borradores, setBorradores] = useState([]); 
 
   const [loading, setLoading] = useState(false);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
@@ -71,6 +71,7 @@ export default function FormularioProyecto({ user }) {
     setError("");
   }, [tipo]);
 
+
   const opciones = useMemo(() => opcionesPorTipo[tipo] || [], [tipo]);
 
   const superficie = useMemo(() => {
@@ -82,7 +83,9 @@ export default function FormularioProyecto({ user }) {
 
     if (tipo === "Tabique") {
       if (!valorAlto || valorAlto <= 0) return 0;
-      return valorLargo * valorAlto;
+      if (!valorAncho || valorAncho <= 0) return 0;
+
+      return valorAncho * valorAlto;
     }
 
     if (!valorAncho || valorAncho <= 0) return 0;
@@ -150,14 +153,16 @@ export default function FormularioProyecto({ user }) {
     }
   };
 
-  const toggleHistorial = async () => {
-    const nuevoEstado = !showHistorial;
-    setShowHistorial(nuevoEstado);
-
-    if (nuevoEstado) {
-      await cargarHistorialBD();
-    }
-  };
+  const cargarVistaHistorial = async () => {
+  if (historial.length === 0) {
+    await cargarHistorialBD();
+  }
+};
+useEffect(() => {
+  if (vistaActiva === "historial") {
+    cargarVistaHistorial();
+  }
+}, [vistaActiva]);
 
   const verDetallePresupuesto = async (itemHistorial) => {
     setLoading(true);
@@ -246,7 +251,8 @@ export default function FormularioProyecto({ user }) {
     if (!nombreObra.trim()) return "Debes ingresar un nombre para la obra.";
     if (!tipo) return "Debes seleccionar un tipo de obra.";
     if (!subtipo) return "Debes seleccionar un subtipo.";
-    if (!largo || Number(largo) <= 0) return "Debes ingresar un largo válido.";
+    if (tipo !== "Tabique" && (!largo || Number(largo) <= 0))
+    return "Debes ingresar un largo válido.";
     if (!ancho || Number(ancho) <= 0) return "Debes ingresar un ancho válido.";
 
     if (tipo === "Radier" && (!alto || Number(alto) <= 0)) {
@@ -348,7 +354,7 @@ export default function FormularioProyecto({ user }) {
         total: dataPresupuesto.total || 0,
       });
 
-      if (showHistorial) {
+      if (vistaActiva === "historial") {
         await cargarHistorialBD();
       }
     } catch (error) {
@@ -438,7 +444,12 @@ export default function FormularioProyecto({ user }) {
     : [];
 
   return (
+  <>
     <section className="card">
+
+
+      {vistaActiva === "inicio" && (
+        <>
       <h2>Formulario de proyecto</h2>
 
       <p>
@@ -491,31 +502,33 @@ export default function FormularioProyecto({ user }) {
           </select>
         </label>
 
-        <label>
-          Largo en metros
-          <input
-            type="number"
-            name="largo"
-            min="0"
-            step="0.01"
-            value={largo}
-            onChange={handleInputChange}
-            placeholder="Ej: 5"
-          />
-        </label>
+        {tipo !== "Tabique" && (
+          <label>
+            Largo en metros
+            <input
+              type="number"
+              name="largo"
+              min="0"
+              step="0.01"
+              value={largo}
+              onChange={handleInputChange}
+            />
+          </label>
+        )}
 
         <label>
-          Ancho en metros
-          <input
-            type="number"
-            name="ancho"
-            min="0"
-            step="0.01"
-            value={ancho}
-            onChange={handleInputChange}
-            placeholder="Ej: 3"
-          />
-        </label>
+        {tipo === "Tabique"
+          ? "Ancho en metros"
+          : "Ancho en metros"}
+        <input
+          type="number"
+          name="ancho"
+          min="0"
+          step="0.01"
+          value={ancho}
+          onChange={handleInputChange}
+        />
+      </label>
 
         {requiereAlto && (
           <label>
@@ -540,8 +553,8 @@ export default function FormularioProyecto({ user }) {
               !nombreObra.trim() ||
               !tipo ||
               !subtipo ||
-              !largo ||
-              !ancho ||
+              (tipo !== "Tabique" && !largo) ||
+                !ancho ||
               (requiereAlto && !alto)
             }
           >
@@ -591,20 +604,11 @@ export default function FormularioProyecto({ user }) {
         )}
       </div>
 
-      <div className="button-row">
-        <button type="button" onClick={toggleHistorial}>
-          {showHistorial ? "Ocultar historial" : "Ver historial"}
-        </button>
+      </>
+  )}
 
-        <button
-          type="button"
-          onClick={() => setShowBorradores(!showBorradores)}
-        >
-          {showBorradores ? "Ocultar borradores" : "Ver borradores"}
-        </button>
-      </div>
-
-      {showHistorial && (
+      {vistaActiva === "historial" && (
+        
         <div className="historial-section">
           <h3>Historial de presupuestos guardados</h3>
 
@@ -642,7 +646,7 @@ export default function FormularioProyecto({ user }) {
         </div>
       )}
 
-      {showBorradores && (
+      {vistaActiva === "borradores" && (
         <div className="borradores-section">
           <h3>Borradores</h3>
 
@@ -696,8 +700,7 @@ export default function FormularioProyecto({ user }) {
         </div>
       )}
 
-      {resultado && (
-        <div className="result-box">
+    {vistaActiva === "inicio" && resultado && (        <div className="result-box">
           <h3>Presupuesto generado</h3>
 
           <p>
@@ -835,19 +838,22 @@ export default function FormularioProyecto({ user }) {
               </strong>
             </p>
 
-            {detalleResultado.length > 0 && (
-              <ComparadorCotizaciones
-                materiales={detalleResultado.map((item) => ({
-                  nombre: obtenerNombreMaterial(item),
-                  cantidad: obtenerCantidadCompra(item.cantidad),
-                  precioUnitario: item.precioUnitario,
-                  subtotal: calcularSubtotalCompra(item),
-                }))}
-              />
-            )}
           </div>
         </div>
       )}
+
+      {vistaActiva === "comparador" && resultado && (
+        <ComparadorCotizaciones
+          materiales={detalleResultado.map((item) => ({
+            nombre: obtenerNombreMaterial(item),
+            cantidad: obtenerCantidadCompra(item.cantidad),
+            precioUnitario: item.precioUnitario,
+            subtotal: calcularSubtotalCompra(item),
+          }))}
+        />
+      )}
+
     </section>
-  );
+  </>
+);
 }

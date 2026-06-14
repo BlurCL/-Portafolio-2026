@@ -1,32 +1,83 @@
 import React from "react";
 
-export default function MainLayout({ user, onLogout, children }) {
+export default function MainLayout({
+  user,
+  onLogout,
+  children,
+  vistaActiva,
+  setVistaActiva,
+}) {
   return (
     <div className="app-container">
-      <div className="main-content">
-        <div className="header-wrapper">
-          <h1 className="text-center" style={{ margin: 0 }}>ConstruFácil</h1>
-          {user && (
-            <button className="btn-logout" onClick={onLogout}>Cerrar sesión</button>
-          )}
+
+      <nav className="navbar">
+
+        <div className="navbar-logo">
+          ConstruFácil
         </div>
-        {user && (
-          <p className="text-center mt-10">
-            Bienvenido, <strong>{user.nombre || user.correo}</strong>
-          </p>
-        )}
+
+        
+
+<div className="navbar-menu">
+
+  <button
+    className={vistaActiva === "inicio"
+      ? "nav-btn active"
+      : "nav-btn"}
+    onClick={() => setVistaActiva("inicio")}
+  >
+    Inicio
+  </button>
+
+  <button
+    className={vistaActiva === "historial"
+      ? "nav-btn active"
+      : "nav-btn"}
+    onClick={() => setVistaActiva("historial")}
+  >
+    Historial
+  </button>
+
+  <button
+    className={vistaActiva === "borradores"
+      ? "nav-btn active"
+      : "nav-btn"}
+    onClick={() => setVistaActiva("borradores")}
+  >
+    Borradores
+  </button>
+
+  <button
+    className={vistaActiva === "comparador"
+      ? "nav-btn active"
+      : "nav-btn"}
+    onClick={() => setVistaActiva("comparador")}
+  >
+    Comparador
+  </button>
+
+</div>
+
+
+      <div className="navbar-user">
+        <span>
+          Bienvenido, <strong>{user?.nombre || user?.correo}</strong>
+        </span>
+
+        <button
+          className="btn-logout"
+          onClick={onLogout}
+        >
+          Cerrar sesión
+        </button>
       </div>
 
-      <div className="main-content mt-10">
+      </nav>
+
+      <div className="main-content">
         {children}
       </div>
 
-      <footer className="app-footer">
-        <div className="app-footer-content">
-          <p>ConstruFácil se basa en la norma chilena NCh353:2018 para estimar materiales de construcción.</p>
-          <p>El sistema solo aplica reglas simplificadas y no reemplaza un presupuesto profesional.</p>
-        </div>
-      </footer>
     </div>
   );
 }

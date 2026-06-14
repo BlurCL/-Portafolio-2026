@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import MainLayout from "./layouts/mainLayouts";
 import FormularioProyecto from "./components/FormularioProyecto";
@@ -7,6 +7,7 @@ import Register from "./views/Register"; // <-- ¡Aquí también!
 
 export default function App() {
   const { user, authView, setAuthView, handleLogin, handleLogout } = useAuth();
+  const [vistaActiva, setVistaActiva] = useState("inicio");
 
   if (!user && authView === "initial") {
     return (
@@ -31,8 +32,18 @@ export default function App() {
   }
 
   return (
-    <MainLayout user={user} onLogout={handleLogout}>
-      <FormularioProyecto user={user} />
-    </MainLayout>
+    <MainLayout
+  user={user}
+  onLogout={handleLogout}
+  vistaActiva={vistaActiva}
+  setVistaActiva={setVistaActiva}
+>
+  <FormularioProyecto
+    user={user}
+    vistaActiva={vistaActiva}
+  />
+</MainLayout>
   );
+
+  
 }
