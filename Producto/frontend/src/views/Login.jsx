@@ -19,6 +19,13 @@ export default function Login({ onLogin, onSwitchToRegister }) {
       return;
     }
 
+    const regexCorreo = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
+
+    if (!regexCorreo.test(email.trim())) {
+      setError("Debe ingresar un correo electrónico válido.");
+      return;
+    }
+
     try {
       setCargando(true);
 
@@ -75,7 +82,7 @@ export default function Login({ onLogin, onSwitchToRegister }) {
           <input
             className="auth-input"
             type="email"
-            placeholder="Correo electrónico"
+            placeholder="Ej: nombre@correo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -83,7 +90,7 @@ export default function Login({ onLogin, onSwitchToRegister }) {
           <input
             className="auth-input"
             type="password"
-            placeholder="Contraseña"
+            placeholder="Construfacil123"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

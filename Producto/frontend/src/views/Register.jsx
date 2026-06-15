@@ -26,12 +26,35 @@ export default function Register({ onRegister, onSwitchToLogin }) {
     setError("");
 
     if (!nombre || !email || !password || !confirm) {
+      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(nombre.trim())) {
+        setError("El nombre solo puede contener letras.");
+        return;
+      }
       setError("Completa nombre, correo y contraseña.");
       return;
     }
 
     if (password !== confirm) {
       setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (
+      mes < 0 ||
+      (mes === 0 && hoy.getDate() < nacimiento.getDate())
+    ) {
+      edad--;
+    }
+
+    if (edad < 18) {
+      setError("Debes ser mayor de 18 años.");
       return;
     }
 
@@ -50,6 +73,18 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           confirmarPassword: confirm
         })
       });
+
+      const regexTelefono = /^(\+56)?9\d{8}$/;
+
+      if (telefono && !regexTelefono.test(telefono)) {
+        setError("Debe ingresar un teléfono válido. Ej: +56912345678");
+        return;
+      }
+
+      if (!region || !ciudad || !comuna) {
+        setError("Debe seleccionar región, ciudad y comuna.");
+        return;
+      }
 
       if (!response.ok) {
         let mensajeError = "No se pudo registrar el usuario.";
@@ -120,7 +155,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <input
             className="auth-input"
             type="text"
-            placeholder="Nombre completo"
+            placeholder="Ej: Juan Pérez González"
             value={nombre}
             onChange={e => setNombre(e.target.value)}
           />
@@ -136,7 +171,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <input
             className="auth-input"
             type="email"
-            placeholder="Correo electrónico"
+            placeholder="Ej: nombre@correo.com"
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
@@ -144,7 +179,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <input
             className="auth-input"
             type="tel"
-            placeholder="Número de teléfono"
+            placeholder="Ej: +56912345678"
             value={telefono}
             onChange={e => setTelefono(e.target.value)}
           />
@@ -152,7 +187,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <input
             className="auth-input"
             type="text"
-            placeholder="Dirección"
+            placeholder="Ej: Alameda 1234"
             value={direccion}
             onChange={e => setDireccion(e.target.value)}
           />
@@ -206,18 +241,23 @@ export default function Register({ onRegister, onSwitchToLogin }) {
           <input
             className="auth-input"
             type="password"
-            placeholder="Contraseña"
+            placeholder="Mínimo 8 caracteres"
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
 
+          <small className="auth-help">
+              Debe contener al menos 8 caracteres, una mayúscula y un número.
+          </small>
+
           <input
             className="auth-input"
             type="password"
-            placeholder="Confirmar contraseña"
+            placeholder="Repita la contraseña"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
           />
+          
 
           {error && <div className="auth-error">{error}</div>}
 

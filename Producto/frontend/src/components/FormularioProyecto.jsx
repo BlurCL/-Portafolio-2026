@@ -74,24 +74,25 @@ export default function FormularioProyecto({
 
   const opciones = useMemo(() => opcionesPorTipo[tipo] || [], [tipo]);
 
-  const superficie = useMemo(() => {
-    const valorLargo = Number(largo);
-    const valorAncho = Number(ancho);
-    const valorAlto = Number(alto);
+   const superficie = useMemo(() => {
+  const valorLargo = Number(largo);
+  const valorAncho = Number(ancho);
+  const valorAlto = Number(alto);
 
-    if (!valorLargo || valorLargo <= 0) return 0;
-
-    if (tipo === "Tabique") {
-      if (!valorAlto || valorAlto <= 0) return 0;
-      if (!valorAncho || valorAncho <= 0) return 0;
-
-      return valorAncho * valorAlto;
-    }
-
+  // TABIQUE
+  if (tipo === "Tabique") {
     if (!valorAncho || valorAncho <= 0) return 0;
+    if (!valorAlto || valorAlto <= 0) return 0;
 
-    return valorLargo * valorAncho;
-  }, [tipo, largo, ancho, alto]);
+    return valorAncho * valorAlto;
+  }
+
+  // RADIER Y OTROS
+  if (!valorLargo || valorLargo <= 0) return 0;
+  if (!valorAncho || valorAncho <= 0) return 0;
+
+  return valorLargo * valorAncho;
+}, [tipo, largo, ancho, alto]);
 
   const requiereAlto = tipo === "Radier" || tipo === "Tabique";
 
@@ -842,16 +843,32 @@ useEffect(() => {
         </div>
       )}
 
-      {vistaActiva === "comparador" && resultado && (
-        <ComparadorCotizaciones
-          materiales={detalleResultado.map((item) => ({
-            nombre: obtenerNombreMaterial(item),
-            cantidad: obtenerCantidadCompra(item.cantidad),
-            precioUnitario: item.precioUnitario,
-            subtotal: calcularSubtotalCompra(item),
-          }))}
-        />
-      )}
+      {vistaActiva === "comparador" && (
+  !resultado ? (
+    <div className="result-box">
+      <h3>Comparador de cotizaciones</h3>
+
+      <p>
+        Primero debes generar un presupuesto desde la opción
+        <strong> Inicio</strong> para poder comparar cotizaciones.
+      </p>
+
+      <p style={{ marginTop: "10px", color: "#64748b" }}>
+        Una vez generado el presupuesto, podrás revisar y comparar los
+        materiales calculados automáticamente por el sistema.
+      </p>
+    </div>
+  ) : (
+    <ComparadorCotizaciones
+      materiales={detalleResultado.map((item) => ({
+        nombre: obtenerNombreMaterial(item),
+        cantidad: obtenerCantidadCompra(item.cantidad),
+        precioUnitario: item.precioUnitario,
+        subtotal: calcularSubtotalCompra(item),
+      }))}
+    />
+  )
+)}
 
     </section>
   </>

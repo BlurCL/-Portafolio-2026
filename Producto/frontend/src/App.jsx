@@ -34,7 +34,11 @@ export default function App() {
   return (
     <MainLayout
   user={user}
-  onLogout={handleLogout}
+  onLogout={() => {
+  if (window.confirm("¿Desea cerrar sesión?")) {
+    handleLogout();
+  }
+    }}
   vistaActiva={vistaActiva}
   setVistaActiva={setVistaActiva}
 >
