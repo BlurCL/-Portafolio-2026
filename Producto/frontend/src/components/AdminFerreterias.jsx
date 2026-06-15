@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { adminService } from "../services/adminService";
 
 export default function AdminFerreterias({ user }) {
   const [ferreterias, setFerreterias] = useState([]);
@@ -8,23 +9,21 @@ export default function AdminFerreterias({ user }) {
 
   const esAdmin = String(user?.rol || "").toUpperCase() === "ADMIN";
 
-  if (!esAdmin) {
-    return (
-      <section className="card">
-        <h2>Acceso restringido</h2>
-        <p>Este módulo solo está disponible para usuarios administradores.</p>
-      </section>
-    );
-  }
+  const cargarFerreterias = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await adminService.listarFerreterias();
+      setFerreterias(data);
+    } catch (err) {
+      setError(err.message || "Error al cargar ferreterías.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <section className="card admin-card">
-      <h2>Panel de administración</h2>
-      <p>
-        Desde aquí puedes habilitar o deshabilitar las ferreterías que aparecen en
-        el comparador de cotizaciones.
-      </p>
-    </section>
-  );
-}
-
+  useEffect(() => {
+    if (esAdmin) {
+      cargarFerreterias();
+    }
+  }, [esAdmin]);
