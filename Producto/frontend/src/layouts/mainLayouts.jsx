@@ -43,13 +43,6 @@ export default function MainLayout({
               >
                 Borradores
               </button>
-
-              <button
-                className={vistaActiva === "comparador" ? "nav-btn active" : "nav-btn"}
-                onClick={() => setVistaActiva("comparador")}
-              >
-                Comparador
-              </button>
             </>
           )}
 
@@ -71,7 +64,7 @@ export default function MainLayout({
         </div>
       </nav>
 
-      <div className="main-content">
+      <div className={esAdmin ? "main-content admin-main-content" : "main-content"}>
         {children}
       </div>
     </div>

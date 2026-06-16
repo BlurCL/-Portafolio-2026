@@ -171,7 +171,10 @@ public class FerreteriaService {
             BigDecimal subtotal = precioUnitario.multiply(cantidad);
             totalProductos = totalProductos.add(subtotal);
 
-            Integer stock = productoEncontrado.getStock() != null ? productoEncontrado.getStock() : 0;
+            Integer stock = productoEncontrado.getStock() != null
+                    ? productoEncontrado.getStock()
+                    : 0;
+
             boolean stockSuficiente = stock >= cantidad.doubleValue();
 
             detalle.add(new DetalleCotizacionResponse(
@@ -215,6 +218,140 @@ public class FerreteriaService {
 
         String materialNormalizado = normalizarTexto(nombreMaterial);
 
+        /*
+         * Búsquedas prioritarias.
+         * Esto evita que "Tornillo Yeso Cartón" caiga como "Plancha Yeso Cartón"
+         * solo porque ambos textos contienen "yeso" y "cartón".
+         */
+
+        if (materialNormalizado.contains("tornillo")) {
+            ProductoFerreteria producto = null;
+
+            if (materialNormalizado.contains("policarbonato")) {
+                producto = buscarProductoConTodasLasPalabras(
+                        productos,
+                        "tornillo",
+                        "policarbonato"
+                );
+            }
+
+            if (producto == null && materialNormalizado.contains("yeso")) {
+                producto = buscarProductoConTodasLasPalabras(
+                        productos,
+                        "tornillo",
+                        "yeso"
+                );
+            }
+
+            if (producto == null && materialNormalizado.contains("techo")) {
+                producto = buscarProductoConTodasLasPalabras(
+                        productos,
+                        "tornillo",
+                        "techo"
+                );
+            }
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(
+                        productos,
+                        "tornillo"
+                );
+            }
+
+            return producto;
+        }
+
+        if (materialNormalizado.contains("clavo")) {
+            return buscarProductoConTodasLasPalabras(productos, "clavo");
+        }
+
+        if (materialNormalizado.contains("cinta")) {
+            return buscarProductoConTodasLasPalabras(productos, "cinta");
+        }
+
+        if (materialNormalizado.contains("fieltro")) {
+            return buscarProductoConTodasLasPalabras(productos, "fieltro");
+        }
+
+        if (materialNormalizado.contains("osb")) {
+            return buscarProductoConTodasLasPalabras(productos, "osb");
+        }
+
+        if (materialNormalizado.contains("teja")) {
+            return buscarProductoConTodasLasPalabras(productos, "teja");
+        }
+
+        if (materialNormalizado.contains("policarbonato")) {
+            return buscarProductoConTodasLasPalabras(productos, "policarbonato");
+        }
+
+        if (materialNormalizado.contains("yeso") || materialNormalizado.contains("carton")) {
+            ProductoFerreteria producto = buscarProductoConTodasLasPalabras(
+                    productos,
+                    "plancha",
+                    "yeso"
+            );
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(productos, "yeso");
+            }
+
+            return producto;
+        }
+
+        if (
+                materialNormalizado.contains("metalcon") ||
+                materialNormalizado.contains("canal") ||
+                materialNormalizado.contains("montante") ||
+                materialNormalizado.contains("perfil")
+        ) {
+            ProductoFerreteria producto = null;
+
+            if (materialNormalizado.contains("omega")) {
+                producto = buscarProductoConTodasLasPalabras(productos, "omega");
+            }
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(
+                        productos,
+                        "perfil",
+                        "metalcon"
+                );
+            }
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(productos, "metalcon");
+            }
+
+            return producto;
+        }
+
+        if (materialNormalizado.contains("zinc")) {
+            return buscarProductoConTodasLasPalabras(productos, "zinc");
+        }
+
+        if (
+                materialNormalizado.contains("pino") ||
+                materialNormalizado.contains("madera") ||
+                materialNormalizado.contains("costanera")
+        ) {
+            ProductoFerreteria producto = buscarProductoConTodasLasPalabras(productos, "pino");
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(productos, "madera");
+            }
+
+            if (producto == null) {
+                producto = buscarProductoConTodasLasPalabras(productos, "costanera");
+            }
+
+            return producto;
+        }
+
+        /*
+         * Búsqueda general para materiales simples:
+         * cemento, arena, grava, malla, etc.
+         */
         return productos.stream()
                 .filter(producto -> producto.getNombreProducto() != null)
                 .filter(producto -> {
@@ -228,7 +365,62 @@ public class FerreteriaService {
                 .orElse(null);
     }
 
+    private ProductoFerreteria buscarProductoConTodasLasPalabras(
+            List<ProductoFerreteria> productos,
+            String... palabras
+    ) {
+        for (ProductoFerreteria producto : productos) {
+            if (producto.getNombreProducto() == null) {
+                continue;
+            }
+
+            String productoNormalizado = normalizarTexto(producto.getNombreProducto());
+            boolean coincide = true;
+
+            for (String palabra : palabras) {
+                if (!productoNormalizado.contains(normalizarTexto(palabra))) {
+                    coincide = false;
+                    break;
+                }
+            }
+
+            if (coincide) {
+                return producto;
+            }
+        }
+
+        return null;
+    }
+
     private boolean coincidePorPalabraClave(String material, String producto) {
+        if (material.contains("tornillo")) {
+            return producto.contains("tornillo");
+        }
+
+        if (material.contains("clavo")) {
+            return producto.contains("clavo");
+        }
+
+        if (material.contains("cinta")) {
+            return producto.contains("cinta");
+        }
+
+        if (material.contains("fieltro")) {
+            return producto.contains("fieltro");
+        }
+
+        if (material.contains("osb")) {
+            return producto.contains("osb");
+        }
+
+        if (material.contains("teja")) {
+            return producto.contains("teja");
+        }
+
+        if (material.contains("policarbonato")) {
+            return producto.contains("policarbonato");
+        }
+
         if (material.contains("cemento") && producto.contains("cemento")) return true;
         if (material.contains("arena") && producto.contains("arena")) return true;
         if (material.contains("grava") && producto.contains("grava")) return true;
@@ -238,9 +430,10 @@ public class FerreteriaService {
         if (material.contains("metalcon") && producto.contains("metalcon")) return true;
         if (material.contains("yeso") && producto.contains("yeso")) return true;
         if (material.contains("carton") && producto.contains("carton")) return true;
-        if (material.contains("tornillo") && producto.contains("tornillo")) return true;
         if (material.contains("zinc") && producto.contains("zinc")) return true;
         if (material.contains("costanera") && producto.contains("costanera")) return true;
+        if (material.contains("pino") && producto.contains("pino")) return true;
+        if (material.contains("madera") && producto.contains("madera")) return true;
 
         return false;
     }

@@ -51,21 +51,33 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
     const texto = nombre.toLowerCase();
 
     if (texto.includes("cemento")) return "sacos";
-    if (texto.includes("malla")) return "unidades";
-    if (texto.includes("tornillo")) return "unidades";
     if (texto.includes("arena")) return "m³";
     if (texto.includes("grava")) return "m³";
+    if (texto.includes("malla")) return "unidades";
+    if (texto.includes("tornillo")) return "unidades";
     if (texto.includes("zinc")) return "planchas";
     if (texto.includes("costanera")) return "unidades";
     if (texto.includes("perfil")) return "unidades";
     if (texto.includes("yeso")) return "planchas";
+    if (texto.includes("osb")) return "unidades";
+    if (texto.includes("teja")) return "unidades";
+    if (texto.includes("fieltro")) return "rollos";
+    if (texto.includes("clavo")) return "unidades";
+    if (texto.includes("policarbonato")) return "unidades";
+    if (texto.includes("cinta")) return "rollos";
+    if (texto.includes("pino")) return "unidades";
+    if (texto.includes("canal")) return "unidades";
+    if (texto.includes("montante")) return "unidades";
 
     return "unidades";
   };
 
   const obtenerCantidadComercial = (item) => {
     const nombre =
-      item.productoEncontrado || item.materialSolicitado || item.nombre || "";
+      item.productoEncontrado ||
+      item.materialSolicitado ||
+      item.nombre ||
+      "";
 
     const cantidadTecnica = Number(item.cantidad || 0);
     const unidad = obtenerUnidadComercial(nombre);
@@ -167,6 +179,48 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
   }, [materiales, totalBase]);
 
   const codificarCarrito = (cotizacion) => {
+    const productos = Array.isArray(cotizacion.detalle)
+      ? cotizacion.detalle.map((item) => {
+          const { cantidadRecomendada, unidad } =
+            obtenerCantidadComercial(item);
+
+          const materialSolicitado =
+            item.materialSolicitado ||
+            item.material ||
+            item.nombreMaterial ||
+            "Material no informado";
+
+          const productoEncontrado =
+            item.productoEncontrado ||
+            item.nombreProducto ||
+            item.producto ||
+            materialSolicitado;
+
+          return {
+            nombre: productoEncontrado,
+            nombreProducto: productoEncontrado,
+            productoEncontrado,
+            productoFerreteria: productoEncontrado,
+
+            material: materialSolicitado,
+            nombreMaterial: materialSolicitado,
+            materialSolicitado,
+
+            cantidad: cantidadRecomendada,
+            cantidadParaCompra: cantidadRecomendada,
+            unidadVenta: unidad,
+            unidad,
+
+            precioUnitario: Number(item.precioUnitario || 0),
+            precio: Number(item.precioUnitario || 0),
+            subtotal: calcularSubtotalComercial(item),
+
+            stockSuficiente: item.stockSuficiente,
+            codigoFerreteria: cotizacion.codigoFerreteria,
+          };
+        })
+      : [];
+
     const carrito = {
       codigoFerreteria: cotizacion.codigoFerreteria,
       nombreFerreteria: obtenerNombreComercial(cotizacion),
@@ -175,23 +229,7 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
       costoDespacho: Number(cotizacion.costoDespacho || 0),
       totalProductos: calcularTotalProductosComercial(cotizacion),
       totalCotizacion: calcularTotalCotizacionComercial(cotizacion),
-      productos: Array.isArray(cotizacion.detalle)
-        ? cotizacion.detalle.map((item) => {
-            const { cantidadRecomendada, unidad } =
-              obtenerCantidadComercial(item);
-
-            return {
-              nombre: item.productoEncontrado || item.materialSolicitado,
-              material: item.materialSolicitado,
-              cantidad: cantidadRecomendada,
-              unidadVenta: unidad,
-              precioUnitario: Number(item.precioUnitario || 0),
-              precio: Number(item.precioUnitario || 0),
-              subtotal: calcularSubtotalComercial(item),
-              stockSuficiente: item.stockSuficiente,
-            };
-          })
-        : [],
+      productos,
     };
 
     return encodeURIComponent(
@@ -222,14 +260,12 @@ export default function ComparadorCotizaciones({ materiales = [] }) {
 
   return (
     <div className="comparador-section">
-      <h3>Comparar cotizaciones en ferreterías</h3>
-
       <p>
         <strong>Comuna de destino:</strong> Maipú
       </p>
 
       <p>
-        <strong>Total base del presupuesto:</strong>{" "}
+        <strong>Total referencial del presupuesto:</strong>{" "}
         {formatCLP(totalBase)}
       </p>
 

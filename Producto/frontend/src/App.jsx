@@ -60,7 +60,11 @@ export default function App() {
       {esAdmin ? (
         <AdminFerreterias user={user} />
       ) : (
-        <FormularioProyecto user={user} vistaActiva={vistaActiva} />
+        <FormularioProyecto
+          user={user}
+          vistaActiva={vistaActiva}
+          setVistaActiva={setVistaActiva}
+        />
       )}
     </MainLayout>
   );
