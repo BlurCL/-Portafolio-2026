@@ -23,25 +23,24 @@ export const opcionesPorTipo = {
     "Techumbre Policarbonato Alveolar"
   ]
 };
-
 export const datosConstruccion = {
   Radier: {
-    // Calculado para 1 m2 con espesor de 10 cm (0.1 m3)
+    // Calculado para 1 m2 con espesor de 10 cm (0.1 m3) - Dosificación H15
     "Radier Tránsito Peatonal (Patio/Interior)": {
       materiales: [
-        { nombre: "Cemento (Saco 25kg)", rendimiento: 0.6, precio: 5000 }, 
-        { nombre: "Arena (m3)", rendimiento: 0.05, precio: 20000 },
-        { nombre: "Grava (m3)", rendimiento: 0.05, precio: 18000 },
+        { nombre: "Cemento (Saco 25kg)", rendimiento: 1.1, precio: 5000 }, 
+        { nombre: "Arena (m3)", rendimiento: 0.08, precio: 20000 },
+        { nombre: "Grava (m3)", rendimiento: 0.09, precio: 18000 },
         { nombre: "Malla ACMA C-92 (2.6x5m)", rendimiento: 0.08, precio: 15000 } // Rinde aprox 12.5 m2 traslapada
       ]
     },
 
-    // Calculado para 1 m2 con espesor de 15 cm (0.15 m3)
+    // Calculado para 1 m2 con espesor de 15 cm (0.15 m3) - Dosificación H25
     "Radier Tránsito Vehicular (Entrada de Auto)": {
       materiales: [
-        { nombre: "Cemento (Saco 25kg)", rendimiento: 0.9, precio: 5000 },
-        { nombre: "Arena (m3)", rendimiento: 0.08, precio: 20000 },
-        { nombre: "Grava (m3)", rendimiento: 0.08, precio: 18000 },
+        { nombre: "Cemento (Saco 25kg)", rendimiento: 2.1, precio: 5000 },
+        { nombre: "Arena (m3)", rendimiento: 0.12, precio: 20000 },
+        { nombre: "Grava (m3)", rendimiento: 0.14, precio: 18000 },
         { nombre: "Malla ACMA C-139 (2.6x5m)", rendimiento: 0.08, precio: 22000 } 
       ]
     }
@@ -51,17 +50,17 @@ export const datosConstruccion = {
     // Revestido por ambas caras. Montantes cada 40cm.
     "Tabique Divisorio Metalcon (38mm) con Yeso Cartón": {
       materiales: [
-        { nombre: "Montante Metalcon 38mm (Tira 2.4m)", rendimiento: 1.2, precio: 2500 }, // Aprox 1.2 tiras por m2
+        { nombre: "Montante Metalcon 38mm (Tira 2.4m)", rendimiento: 1.4, precio: 2500 }, // Considera pies derechos + refuerzos
         { nombre: "Canal Metalcon 40mm (Tira 3m)", rendimiento: 0.4, precio: 2800 },    // Aprox 0.4 tiras por m2
-        { nombre: "Plancha Yeso Cartón 15mm (1.2x2.4m)", rendimiento: 0.7, precio: 8500 }, // Rinde 2.88 m2. Necesitamos cubrir ambas caras (2 m2 por m2 de muro)
-        { nombre: "Tornillo Yeso Cartón (Caja 100un)", rendimiento: 0.25, precio: 3000 }  // Aprox 25 tornillos por m2 (por ambas caras)
+        { nombre: "Plancha Yeso Cartón 15mm (1.2x2.4m)", rendimiento: 0.7, precio: 8500 }, // Rinde 2.88 m2. Cubre ambas caras
+        { nombre: "Tornillo Yeso Cartón (Caja 100un)", rendimiento: 0.25, precio: 3000 }  // Aprox 25 tornillos por m2
       ]
     },
 
     // Revestido por ambas caras. Montantes cada 40cm.
     "Tabique Estructural Metalcon (60mm) con Yeso Cartón": {
       materiales: [
-        { nombre: "Montante Metalcon 60mm (Tira 2.4m)", rendimiento: 1.2, precio: 3500 },
+        { nombre: "Montante Metalcon 60mm (Tira 2.4m)", rendimiento: 1.4, precio: 3500 },
         { nombre: "Canal Metalcon 62mm (Tira 3m)", rendimiento: 0.4, precio: 3800 },
         { nombre: "Plancha Yeso Cartón 15mm (1.2x2.4m)", rendimiento: 0.7, precio: 8500 },
         { nombre: "Tornillo Yeso Cartón (Caja 100un)", rendimiento: 0.25, precio: 3000 }
@@ -71,7 +70,7 @@ export const datosConstruccion = {
     // Revestido por ambas caras. Pie derecho cada 40cm.
     "Tabique Madera (Pino 2x2) con Yeso Cartón": {
       materiales: [
-        { nombre: "Pino Bruto 2x2 (Listón 3.2m)", rendimiento: 1.2, precio: 1800 }, // Estructura y soleras
+        { nombre: "Pino Bruto 2x2 (Listón 3.2m)", rendimiento: 1.4, precio: 1800 }, // Estructura y soleras
         { nombre: "Clavo Madera 3 (Kg)", rendimiento: 0.05, precio: 2500 },
         { nombre: "Plancha Yeso Cartón 15mm (1.2x2.4m)", rendimiento: 0.7, precio: 8500 },
         { nombre: "Tornillo Yeso Cartón (Caja 100un)", rendimiento: 0.25, precio: 3000 }
@@ -100,7 +99,7 @@ export const datosConstruccion = {
       materiales: [
         { nombre: "Placa OSB Estructural 11.1mm (1.22x2.44m)", rendimiento: 0.34, precio: 15000 }, 
         { nombre: "Teja Asfáltica (Paquete rinde 3.1 m2)", rendimiento: 0.33, precio: 22000 },
-        { nombre: "Clavo Techo Teja Asfáltica (Caja 1kg)", rendimiento: 0.03, precio: 3500 },
+        { nombre: "Clavo Techo Teja Asfáltica (Caja 1kg)", rendimiento: 0.07, precio: 3500 },
         { nombre: "Fieltro Asfáltico 15 lbs (Rollo 40m2)", rendimiento: 0.025, precio: 12000 }
       ]
     },

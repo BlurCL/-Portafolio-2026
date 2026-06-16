@@ -25,6 +25,19 @@ public class FerreteriaController {
         return ferreteriaService.listarFerreterias();
     }
 
+    @GetMapping("/admin/ferreterias")
+    public List<FerreteriaResponse> listarFerreteriasAdmin() {
+        return ferreteriaService.listarFerreteriasAdmin();
+    }
+
+    @PatchMapping("/admin/ferreterias/{idFerreteria}/estado")
+    public FerreteriaResponse cambiarEstadoFerreteria(
+            @PathVariable Integer idFerreteria,
+            @RequestParam Boolean activa
+    ) {
+        return ferreteriaService.cambiarEstadoFerreteria(idFerreteria, activa);
+    }
+
     @GetMapping("/ferreterias/{codigoFerreteria}/productos")
     public List<ProductoFerreteriaResponse> listarProductosPorFerreteria(
             @PathVariable String codigoFerreteria
