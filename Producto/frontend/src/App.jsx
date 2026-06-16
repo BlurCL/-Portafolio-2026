@@ -43,7 +43,11 @@ export default function App() {
     );
   }
 
-  const esAdmin = String(user?.rol || "").toUpperCase() === "ADMIN";
+  const rolUsuario = String(
+    user?.rol || localStorage.getItem("rol") || ""
+  ).toUpperCase();
+
+  const esAdmin = rolUsuario === "ADMIN";
 
   return (
     <MainLayout
