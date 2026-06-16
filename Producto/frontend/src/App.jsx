@@ -51,21 +51,17 @@ export default function App() {
 
   return (
     <MainLayout
-  user={user}
-  onLogout={() => {
-  if (window.confirm("¿Desea cerrar sesión?")) {
-    handleLogout();
-  }
-    }}
-  vistaActiva={vistaActiva}
-  setVistaActiva={setVistaActiva}
->
-  <FormularioProyecto
-    user={user}
-    vistaActiva={vistaActiva}
-  />
-</MainLayout>
+      user={user}
+      onLogout={handleLogout}
+      vistaActiva={vistaActiva}
+      setVistaActiva={setVistaActiva}
+      esAdmin={esAdmin}
+    >
+      {esAdmin ? (
+        <AdminFerreterias user={user} />
+      ) : (
+        <FormularioProyecto user={user} vistaActiva={vistaActiva} />
+      )}
+    </MainLayout>
   );
-
-  
 }
