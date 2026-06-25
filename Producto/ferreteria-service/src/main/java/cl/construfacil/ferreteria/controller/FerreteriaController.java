@@ -6,6 +6,9 @@ import cl.construfacil.ferreteria.dto.FerreteriaResponse;
 import cl.construfacil.ferreteria.dto.ProductoFerreteriaResponse;
 import cl.construfacil.ferreteria.service.FerreteriaService;
 import org.springframework.web.bind.annotation.*;
+import cl.construfacil.ferreteria.dto.CrearFerreteriaRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -28,6 +31,14 @@ public class FerreteriaController {
     @GetMapping("/admin/ferreterias")
     public List<FerreteriaResponse> listarFerreteriasAdmin() {
         return ferreteriaService.listarFerreteriasAdmin();
+    }
+
+    @PostMapping("/admin/ferreterias")
+    public ResponseEntity<FerreteriaResponse> crearFerreteria(
+            @RequestBody CrearFerreteriaRequest request
+    ) {
+        FerreteriaResponse nuevaFerreteria = ferreteriaService.crearFerreteria(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaFerreteria);
     }
 
     @PatchMapping("/admin/ferreterias/{idFerreteria}/estado")

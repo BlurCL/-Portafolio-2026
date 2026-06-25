@@ -13,4 +13,6 @@ public interface FerreteriaRepository extends JpaRepository<Ferreteria, Integer>
     List<Ferreteria> findAllByOrderByIdFerreteriaAsc();
 
     Optional<Ferreteria> findByCodigoFerreteriaAndActivaTrue(String codigoFerreteria);
+
+    boolean existsByCodigoFerreteriaIgnoreCase(String codigoFerreteria);
 }

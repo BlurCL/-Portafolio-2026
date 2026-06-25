@@ -12,6 +12,7 @@ import cl.construfacil.ferreteria.repository.FerreteriaRepository;
 import cl.construfacil.ferreteria.repository.ProductoFerreteriaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import cl.construfacil.ferreteria.dto.CrearFerreteriaRequest;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
@@ -59,6 +60,44 @@ public class FerreteriaService {
 
         return mapearFerreteria(actualizada);
     }
+
+    @Transactional
+public FerreteriaResponse crearFerreteria(CrearFerreteriaRequest request) {
+
+    if (request.getCodigoFerreteria() == null || request.getCodigoFerreteria().trim().isEmpty()) {
+        throw new RuntimeException("El código de la ferretería es obligatorio.");
+    }
+
+    if (request.getNombreFerreteria() == null || request.getNombreFerreteria().trim().isEmpty()) {
+        throw new RuntimeException("El nombre de la ferretería es obligatorio.");
+    }
+
+    if (request.getComuna() == null || request.getComuna().trim().isEmpty()) {
+        throw new RuntimeException("La comuna de la ferretería es obligatoria.");
+    }
+
+    String codigo = request.getCodigoFerreteria().trim().toUpperCase();
+
+    if (ferreteriaRepository.existsByCodigoFerreteriaIgnoreCase(codigo)) {
+        throw new RuntimeException("Ya existe una ferretería con ese código.");
+    }
+
+    Ferreteria ferreteria = new Ferreteria();
+    ferreteria.setCodigoFerreteria(codigo);
+    ferreteria.setNombreFerreteria(request.getNombreFerreteria().trim());
+    ferreteria.setComuna(request.getComuna().trim());
+    ferreteria.setDireccion(request.getDireccion() != null ? request.getDireccion().trim() : null);
+    ferreteria.setCostoDespacho(
+            request.getCostoDespacho() != null ? request.getCostoDespacho() : BigDecimal.ZERO
+    );
+
+    // Se crea deshabilitada para no entrar al comparador sin productos asociados.
+    ferreteria.setActiva(false);
+
+    Ferreteria guardada = ferreteriaRepository.save(ferreteria);
+
+    return mapearFerreteria(guardada);
+}
 
     @Transactional(readOnly = true)
     public List<ProductoFerreteriaResponse> listarMateriales() {
