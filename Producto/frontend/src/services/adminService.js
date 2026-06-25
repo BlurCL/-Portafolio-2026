@@ -12,6 +12,22 @@ export const adminService = {
     return response.json();
   },
 
+  async crearFerreteria(data) {
+    const response = await fetch(`${FERRETERIA_API_URL}/admin/ferreterias`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo crear la ferretería.");
+    }
+
+    return response.json();
+  },
+
   async cambiarEstadoFerreteria(idFerreteria, activa) {
     const response = await fetch(
       `${FERRETERIA_API_URL}/admin/ferreterias/${idFerreteria}/estado?activa=${activa}`,
